@@ -5,6 +5,61 @@ import { AudioEngine, now } from './audio';
  * layer nicely over the ambient BGM.
  */
 
+export function sfxBoot(engine: AudioEngine): void {
+  if (!engine.ensure() || !engine.ctx || !engine.master) return;
+  const ctx = engine.ctx;
+  const t = now(engine);
+
+  // Deep metallic impact
+  const o1 = ctx.createOscillator();
+  const g1 = ctx.createGain();
+  o1.type = 'square';
+  o1.frequency.setValueAtTime(80, t);
+  o1.frequency.exponentialRampToValueAtTime(10, t + 0.5);
+  g1.gain.setValueAtTime(0, t);
+  g1.gain.linearRampToValueAtTime(0.6, t + 0.05);
+  g1.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+  o1.connect(g1);
+  g1.connect(engine.master);
+  o1.start(t);
+  o1.stop(t + 2.1);
+
+  // High metallic shimmer (brass gears spinning up)
+  const o2 = ctx.createOscillator();
+  const g2 = ctx.createGain();
+  o2.type = 'triangle';
+  o2.frequency.setValueAtTime(800, t);
+  o2.frequency.linearRampToValueAtTime(1600, t + 1.5);
+  g2.gain.setValueAtTime(0, t);
+  g2.gain.linearRampToValueAtTime(0.2, t + 0.1);
+  g2.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
+  o2.connect(g2);
+  g2.connect(engine.master);
+  o2.start(t);
+  o2.stop(t + 1.6);
+  
+  // Noise burst (steam venting)
+  const bufferSize = ctx.sampleRate * 2;
+  const noise = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = noise.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = noise;
+  const f = ctx.createBiquadFilter();
+  f.type = 'bandpass';
+  f.frequency.setValueAtTime(400, t);
+  f.frequency.linearRampToValueAtTime(3000, t + 1.5);
+  const g3 = ctx.createGain();
+  g3.gain.setValueAtTime(0, t);
+  g3.gain.linearRampToValueAtTime(0.4, t + 0.1);
+  g3.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+  src.connect(f);
+  f.connect(g3);
+  g3.connect(engine.master);
+  src.start(t);
+  src.stop(t + 2.0);
+}
+
 export function sfxSpawn(engine: AudioEngine, colorHue: number = 0.5): void {
   if (!engine.ensure() || !engine.ctx || !engine.master) return;
   const ctx = engine.ctx;

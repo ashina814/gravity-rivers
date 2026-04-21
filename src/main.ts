@@ -8,7 +8,7 @@ import { attachViewport } from '@/render/canvas';
 import { renderScene } from '@/render/scene';
 import { makeAudioEngine } from '@/audio/audio';
 import { makeBgm } from '@/audio/bgm';
-import { sfxClick } from '@/audio/sfx';
+import { sfxClick, sfxBoot } from '@/audio/sfx';
 import { attachDrawing } from '@/input/drawing';
 import { attachKeyboard, makeKeyboardBus, type Action } from '@/input/keyboard';
 import { queryHud, bindHud } from '@/ui/hud';
@@ -161,6 +161,7 @@ function startSession(
   state.began = true;
   audio.ensure();
   audio.setSuspended(false);
+  sfxBoot(audio);
   if (state.settings.bgm) bgm.start();
   splash.hide();
 }

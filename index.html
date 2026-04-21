@@ -19,25 +19,25 @@
     <title>Gravity Rivers</title>
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preload" as="style" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <!-- top chrome / brand -->
-    <header class="brand" aria-hidden="true">
-      <div class="brand-mark">
-        <span class="brand-dot"></span>
-        <span class="brand-name">GRAVITY</span>
-        <span class="brand-name accent">RIVERS</span>
-      </div>
-      <div class="brand-sub">◇ NEON CRT VISUAL TOY ◇ DRAW · FLOW · BLOOM</div>
-    </header>
 
     <!-- stage -->
     <main id="stage">
       <canvas id="scene" aria-label="Gravity Rivers canvas"></canvas>
 
-      <!-- hud overlay -->
-      <div id="hud" class="hud">
+      <!-- Title Screen Overlay -->
+      <div id="title-screen" class="title-screen">
+        <div class="title-content">
+          <h1 class="glitch-text" data-text="TAJIMANIA">TAJIMANIA</h1>
+          <p class="subtitle">STEAMPUNK CHAIN-REACTION BRAWLER</p>
+          <button id="btn-start" class="btn-start">CLICK TO START ENGINE</button>
+        </div>
+      </div>
+      
+      <!-- Game HUD (hidden on boot) -->
+      <div id="hud" class="hud" style="display: none;">
         <div class="hud-left">
           <div class="meter" id="ink-meter" aria-label="Ink meter">
             <div class="meter-label">INK</div>
@@ -60,143 +60,6 @@
         </div>
       </div>
 
-      <!-- tool dock -->
-      <aside class="dock" id="dock">
-        <button class="tool active" data-tool="draw" title="Draw [D]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M3 21 L9 19 L21 7 L17 3 L5 15 L3 21 Z M14 6 L18 10" />
-          </svg>
-          <span>DRAW</span>
-        </button>
-        <button class="tool" data-tool="erase" title="Erase [E]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M3 17 L13 7 L19 13 L9 23 Z M7 21 L15 21" />
-          </svg>
-          <span>ERASE</span>
-        </button>
-        <div class="dock-sep"></div>
-        <button class="tool" id="btn-clear" title="Clear lines [C]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M5 6 L19 6 M8 6 L9 20 L15 20 L16 6 M10 2 L14 2" />
-          </svg>
-          <span>CLEAR</span>
-        </button>
-        <button class="tool" id="btn-snap" title="Snapshot [S]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M4 7 L8 7 L10 5 L14 5 L16 7 L20 7 L20 19 L4 19 Z" />
-            <circle cx="12" cy="13" r="4" />
-          </svg>
-          <span>SNAP</span>
-        </button>
-        <button class="tool" id="btn-pause" title="Pause [Space]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M8 5 L8 19 M16 5 L16 19" />
-          </svg>
-          <span>PAUSE</span>
-        </button>
-        <div class="dock-sep"></div>
-        <button class="tool" id="btn-settings" title="Settings [,]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2 L12 5 M12 19 L12 22 M2 12 L5 12 M19 12 L22 12 M4.9 4.9 L7 7 M17 17 L19.1 19.1 M4.9 19.1 L7 17 M17 7 L19.1 4.9" />
-          </svg>
-          <span>CFG</span>
-        </button>
-      </aside>
-
-      <!-- settings panel -->
-      <section class="panel hidden" id="panel-settings" role="dialog" aria-hidden="true">
-        <header class="panel-head">
-          <div class="panel-title">SETTINGS</div>
-          <button class="panel-close" id="panel-close" aria-label="Close">×</button>
-        </header>
-        <div class="panel-body">
-          <div class="field">
-            <label for="in-spawn-rate">SPAWN RATE</label>
-            <input id="in-spawn-rate" type="range" min="0" max="100" step="1" />
-            <div class="val" id="val-spawn-rate"></div>
-          </div>
-          <div class="field">
-            <label for="in-gravity">GRAVITY</label>
-            <input id="in-gravity" type="range" min="0" max="100" step="1" />
-            <div class="val" id="val-gravity"></div>
-          </div>
-          <div class="field">
-            <label for="in-line-life">LINE LIFE</label>
-            <input id="in-line-life" type="range" min="0" max="100" step="1" />
-            <div class="val" id="val-line-life"></div>
-          </div>
-          <div class="field">
-            <label for="in-trail">TRAIL GLOW</label>
-            <input id="in-trail" type="range" min="0" max="100" step="1" />
-            <div class="val" id="val-trail"></div>
-          </div>
-          <div class="field">
-            <label for="in-volume">VOLUME</label>
-            <input id="in-volume" type="range" min="0" max="100" step="1" />
-            <div class="val" id="val-volume"></div>
-          </div>
-          <div class="field">
-            <label for="in-bgm">AMBIENT BGM</label>
-            <input id="in-bgm" type="checkbox" />
-            <div class="val" id="val-bgm"></div>
-          </div>
-          <div class="field">
-            <label for="in-palette">PALETTE</label>
-            <select id="in-palette">
-              <option value="neon">NEON</option>
-              <option value="candy">CANDY</option>
-              <option value="lava">LAVA</option>
-              <option value="ocean">OCEAN</option>
-              <option value="mono">MONO</option>
-            </select>
-            <div class="val"></div>
-          </div>
-          <div class="field">
-            <label for="in-crt">CRT POSTFX</label>
-            <input id="in-crt" type="checkbox" />
-            <div class="val" id="val-crt"></div>
-          </div>
-          <div class="field">
-            <label for="in-bloom">BLOOM</label>
-            <input id="in-bloom" type="checkbox" />
-            <div class="val" id="val-bloom"></div>
-          </div>
-          <div class="field full">
-            <button class="btn-wide" id="btn-reset-config">RESET TO DEFAULTS</button>
-          </div>
-        </div>
-        <footer class="panel-foot">
-          <span>KEYS</span>
-          <kbd>D</kbd> DRAW
-          <kbd>E</kbd> ERASE
-          <kbd>C</kbd> CLEAR
-          <kbd>S</kbd> SNAP
-          <kbd>⎵</kbd> PAUSE
-          <kbd>,</kbd> CFG
-          <kbd>F</kbd> FULLSCREEN
-        </footer>
-      </section>
-
-      <!-- welcome splash -->
-      <section class="splash" id="splash">
-        <div class="splash-inner">
-          <div class="splash-title">
-            <span>GRAVITY</span>
-            <span class="accent">RIVERS</span>
-          </div>
-          <p class="splash-tag">DRAW · FLOW · BLOOM</p>
-          <p class="splash-desc">
-            Draw lines on the canvas. They become rivers of gravity.<br />
-            Orbs fall through them. Guide the flow.<br />
-            There is no score. There is no lose. Make it beautiful.
-          </p>
-          <button id="btn-start" class="btn-start">BEGIN</button>
-          <p class="splash-fine">
-            mouse / touch · <kbd>D</kbd> draw <kbd>E</kbd> erase <kbd>C</kbd> clear <kbd>S</kbd> snap <kbd>⎵</kbd> pause
-          </p>
-        </div>
-      </section>
     </main>
 
     <script type="module" src="/src/main.ts"></script>

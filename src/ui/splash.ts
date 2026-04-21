@@ -9,10 +9,11 @@ export interface SplashRuntime {
 }
 
 export function bindSplash(): SplashRuntime {
-  const splash = document.getElementById('splash');
-  if (!splash) throw new Error('Missing #splash');
+  const splash = document.getElementById('title-screen');
+  if (!splash) throw new Error('Missing #title-screen');
   const btn = document.getElementById('btn-start');
   if (!btn) throw new Error('Missing #btn-start');
+  const hud = document.getElementById('hud');
 
   let fired = false;
   let cb: (() => void) | null = null;
@@ -20,7 +21,24 @@ export function bindSplash(): SplashRuntime {
   btn.addEventListener('click', () => {
     if (fired) return;
     fired = true;
-    splash.classList.add('hidden');
+    
+    // Flash effect
+    const flash = document.createElement('div');
+    flash.className = 'flash-overlay';
+    document.body.appendChild(flash);
+    
+    // Trigger animation
+    requestAnimationFrame(() => {
+      flash.classList.add('show');
+      splash.classList.add('booting');
+      
+      setTimeout(() => {
+        flash.classList.remove('show');
+        if (hud) hud.style.display = 'flex';
+        setTimeout(() => flash.remove(), 200);
+      }, 150);
+    });
+    
     cb?.();
   });
 
@@ -28,7 +46,8 @@ export function bindSplash(): SplashRuntime {
     hide() {
       if (fired) return;
       fired = true;
-      splash.classList.add('hidden');
+      splash.classList.add('booting');
+      if (hud) hud.style.display = 'flex';
     },
     onStart(fn) {
       cb = fn;
