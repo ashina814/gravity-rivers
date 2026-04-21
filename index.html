@@ -16,7 +16,7 @@
       property="og:description"
       content="Draw rivers of gravity. Watch the orbs find their way." />
 
-    <title>Gravity Rivers</title>
+    <title>TAJIMANIA / Gravity Rivers</title>
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/src/style.css" />
@@ -60,60 +60,122 @@
         </div>
       </div>
 
-      <!-- Tool Dock -->
-      <div class="dock" id="dock" aria-label="Tool dock">
-        <button class="tool active" data-tool="draw" title="Draw Tool (1)">
-          <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
-          DRAW
+      <!-- tool dock -->
+      <aside class="dock" id="dock">
+        <button class="tool active" data-tool="draw" title="Draw [D]">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M3 21 L9 19 L21 7 L17 3 L5 15 L3 21 Z M14 6 L18 10" stroke="currentColor" fill="none"/>
+          </svg>
+          <span>DRAW</span>
         </button>
-        <button class="tool" data-tool="erase" title="Eraser Tool (2)">
-          <svg width="24" height="24" viewBox="0 0 24 24"><path d="M20 20H7L3 16C2.5 15.5 2.5 14.5 3 14L13 4C13.5 3.5 14.5 3.5 15 4L20 9C20.5 9.5 20.5 10.5 20 11L11 20H20"/></svg>
-          ERASE
+        <button class="tool" data-tool="erase" title="Erase [E]">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M3 17 L13 7 L19 13 L9 23 Z M7 21 L15 21" stroke="currentColor" fill="none"/>
+          </svg>
+          <span>ERASE</span>
         </button>
         <div class="dock-sep"></div>
-        <button class="tool" id="btn-pause" title="Pause / Resume (Space)">
-          <svg width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-          PAUSE
+        <button class="tool" id="btn-clear" title="Clear lines [C]">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M5 6 L19 6 M8 6 L9 20 L15 20 L16 6 M10 2 L14 2" stroke="currentColor" fill="none"/>
+          </svg>
+          <span>CLEAR</span>
         </button>
-        <button class="tool" id="btn-clear" title="Clear All Lines (C)">
-          <svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          CLEAR
+        <button class="tool" id="btn-snap" title="Snapshot [S]">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M4 7 L8 7 L10 5 L14 5 L16 7 L20 7 L20 19 L4 19 Z" stroke="currentColor" fill="none"/>
+            <circle cx="12" cy="13" r="4" stroke="currentColor" fill="none"/>
+          </svg>
+          <span>SNAP</span>
         </button>
-        <button class="tool" id="btn-snap" title="Download Snapshot (P)">
-          <svg width="24" height="24" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          SNAP
+        <button class="tool" id="btn-pause" title="Pause [Space]">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M8 5 L8 19 M16 5 L16 19" stroke="currentColor" fill="none"/>
+          </svg>
+          <span>PAUSE</span>
         </button>
-        <button class="tool" id="btn-settings" title="Open Settings (Esc)">
-          <svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          SETTING
+        <div class="dock-sep"></div>
+        <button class="tool" id="btn-settings" title="Settings [,]">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" fill="none"/>
+            <path d="M12 2 L12 5 M12 19 L12 22 M2 12 L5 12 M19 12 L22 12 M4.9 4.9 L7 7 M17 17 L19.1 19.1 M4.9 19.1 L7 17 M17 7 L19.1 4.9" stroke="currentColor" fill="none"/>
+          </svg>
+          <span>CFG</span>
         </button>
-      </div>
+      </aside>
 
-      <!-- Settings Panel -->
-      <div class="panel hidden" id="panel" aria-label="Settings panel">
-        <div class="panel-head">
-          <div class="panel-title">SYSTEM_CONFIG</div>
-          <button class="panel-close" id="btn-close-panel" aria-label="Close settings">&times;</button>
-        </div>
+      <!-- settings panel -->
+      <section class="panel hidden" id="panel-settings" role="dialog" aria-hidden="true">
+        <header class="panel-head">
+          <div class="panel-title">SETTINGS</div>
+          <button class="panel-close" id="panel-close" aria-label="Close">×</button>
+        </header>
         <div class="panel-body">
           <div class="field">
-            <label for="opt-palette">COLOR SCHEME</label>
-            <select id="opt-palette">
-              <option value="cyberpunk">CYBERPUNK</option>
-              <option value="matrix">MATRIX</option>
-              <option value="neon">NEON TOKYO</option>
-            </select>
+            <label for="in-spawn-rate">SPAWN RATE</label>
+            <input id="in-spawn-rate" type="range" min="0" max="100" step="1" />
+            <div class="val" id="val-spawn-rate"></div>
           </div>
           <div class="field">
-            <label for="opt-bgm">BGM</label>
-            <input type="checkbox" id="opt-bgm" checked />
+            <label for="in-gravity">GRAVITY</label>
+            <input id="in-gravity" type="range" min="0" max="100" step="1" />
+            <div class="val" id="val-gravity"></div>
+          </div>
+          <div class="field">
+            <label for="in-line-life">LINE LIFE</label>
+            <input id="in-line-life" type="range" min="0" max="100" step="1" />
+            <div class="val" id="val-line-life"></div>
+          </div>
+          <div class="field">
+            <label for="in-trail">TRAIL GLOW</label>
+            <input id="in-trail" type="range" min="0" max="100" step="1" />
+            <div class="val" id="val-trail"></div>
+          </div>
+          <div class="field">
+            <label for="in-volume">VOLUME</label>
+            <input id="in-volume" type="range" min="0" max="100" step="1" />
+            <div class="val" id="val-volume"></div>
+          </div>
+          <div class="field">
+            <label for="in-bgm">AMBIENT BGM</label>
+            <input id="in-bgm" type="checkbox" />
+            <div class="val" id="val-bgm"></div>
+          </div>
+          <div class="field">
+            <label for="in-palette">PALETTE</label>
+            <select id="in-palette">
+              <option value="neon">NEON</option>
+              <option value="candy">CANDY</option>
+              <option value="lava">LAVA</option>
+              <option value="ocean">OCEAN</option>
+              <option value="mono">MONO</option>
+            </select>
+            <div class="val"></div>
+          </div>
+          <div class="field">
+            <label for="in-crt">CRT POSTFX</label>
+            <input id="in-crt" type="checkbox" />
+            <div class="val" id="val-crt"></div>
+          </div>
+          <div class="field">
+            <label for="in-bloom">BLOOM</label>
+            <input id="in-bloom" type="checkbox" />
+            <div class="val" id="val-bloom"></div>
           </div>
           <div class="field full">
-            <label for="opt-vol">MASTER VOLUME <span class="val" id="vol-val">50%</span></label>
-            <input type="range" id="opt-vol" min="0" max="1" step="0.05" value="0.5" />
+            <button class="btn-wide" id="btn-reset-config">RESET TO DEFAULTS</button>
           </div>
         </div>
-      </div>
+        <footer class="panel-foot">
+          <span>KEYS</span>
+          <kbd>D</kbd> DRAW
+          <kbd>E</kbd> ERASE
+          <kbd>C</kbd> CLEAR
+          <kbd>S</kbd> SNAP
+          <kbd>⎵</kbd> PAUSE
+          <kbd>,</kbd> CFG
+        </footer>
+      </section>
 
     </main>
 
