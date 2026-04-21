@@ -3,6 +3,7 @@ import { buildLine, eraseAt, tryWeldLines, MAX_LINE_LENGTH } from '@/sim/lines';
 import type { AudioEngine } from '@/audio/audio';
 import { sfxDraw, sfxErase } from '@/audio/sfx';
 import { dist } from '@/utils/math';
+import { LEVELS } from '@/core/levels';
 
 /**
  * Wire up pointer events for drawing and erasing.
@@ -60,6 +61,11 @@ export function attachDrawing(
     const last = state.drawing.points[state.drawing.points.length - 1];
     const d = dist(last.x, last.y, x, y);
     if (d < 2) return;
+    
+    // Check Ink Limit
+    const levelDef = LEVELS[state.currentLevelIdx] || LEVELS[0];
+    if (!state.drawing.erasing && state.inkUsed + d > levelDef.maxInk) return;
+
     // soft cap by total stroke length so we don't keep a 10,000 pt buffer
     let totalLen = 0;
     const pts = state.drawing.points;

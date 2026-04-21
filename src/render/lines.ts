@@ -68,14 +68,19 @@ function drawOneLine(
   }
   ctx.restore();
 
-  // Inner highlight pass — thin bright core
+  // Inner highlight pass — flowing arrows/dashed line
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = `rgba(255, 255, 255, ${0.42 * alpha})`;
-  ctx.lineWidth = 1.2;
-  ctx.shadowColor = 'rgba(255,255,255,0.3)';
-  ctx.shadowBlur = 3 * dpr;
+  ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 * alpha})`;
+  ctx.lineWidth = 2.0;
+  ctx.shadowColor = 'rgba(255,255,255,0.6)';
+  ctx.shadowBlur = 4 * dpr;
+  
+  // Make it flow!
+  ctx.setLineDash([12, 18]);
+  ctx.lineDashOffset = -state.timeMs * 0.12;
+  
   strokePath(ctx, pts);
   ctx.restore();
 

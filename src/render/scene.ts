@@ -6,6 +6,7 @@ import { drawTrails } from './trails';
 import { drawOrbs } from './balls';
 import { drawFx } from './fx';
 import { drawPostFx } from './postfx';
+import { drawLevel } from './level';
 
 /**
  * Main render orchestrator. Called once per RAF frame after the
@@ -27,6 +28,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, state: State): void {
   }
 
   drawBackground(ctx, state);
+  drawLevel(ctx, state);
   drawSpawner(ctx, state);
   drawTrails(ctx, state);
   drawLines(ctx, state);

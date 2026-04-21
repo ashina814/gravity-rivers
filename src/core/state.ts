@@ -3,6 +3,7 @@ import type { Palette } from '@/config/palette';
 import type { Orb } from '@/sim/balls';
 import type { Line } from '@/sim/lines';
 import type { Particle, Popup, Flash, ShockRing } from '@/render/particles';
+import type { LevelDef } from './levels';
 
 export type Tool = 'draw' | 'erase';
 
@@ -64,6 +65,13 @@ export interface State {
   flow: Flow;
   bloom: Bloom;
 
+  // Puzzle State
+  currentLevelIdx: number;
+  score: number;
+  inkUsed: number;
+  stateMachine: 'playing' | 'cleared';
+  clearTimer: number;
+
   particles: Particle[];
   popups: Popup[];
   flashes: Flash[];
@@ -107,6 +115,11 @@ export function makeState(settings: Settings, palette: Palette): State {
     },
     flow: { value: 0, target: 0, charge: 0, chain: 0, chainTimer: 0 },
     bloom: { count: 0, pulse: 0, lastAt: 0 },
+    currentLevelIdx: 0,
+    score: 0,
+    inkUsed: 0,
+    stateMachine: 'playing',
+    clearTimer: 0,
     particles: [],
     popups: [],
     flashes: [],

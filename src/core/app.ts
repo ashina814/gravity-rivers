@@ -5,10 +5,10 @@ import type { BgmHandle } from '@/audio/bgm';
 import { sfxBloom, sfxSpawn } from '@/audio/sfx';
 import { tickSpawner } from '@/sim/spawn';
 import { stepPhysics } from '@/sim/physics';
-import { tickFlow, shouldBloom, applyBloomReset, bloomName } from '@/sim/flow';
 import { updateFx } from '@/render/fx';
 import { harvestOrbs } from '@/sim/balls';
 import { decaySegmentTraffic } from '@/sim/lines';
+import { LEVELS } from './levels';
 import type { HudRuntime } from '@/ui/hud';
 
 /**
@@ -81,127 +81,107 @@ function simStep(state: State, stepMs: number, hooks: AppHooks) {
   state.tick++;
 
   // spawn new orbs
-  if (state.began) tickSpawner(state, stepMs);
+  if (state.began && state.stateMachine === 'playing') tickSpawner(state, stepMs);
 
   // physics
   stepPhysics(state, stepMs);
   harvestOrbs(state);
 
-  // flow + bloom
-  tickFlow(state, stepMs);
-  if (shouldBloom(state)) fireBloom(state, hooks);
+  const levelDef = LEVELS[state.currentLevelIdx] || LEVELS[0];
+  if (state.stateMachine === 'playing' && state.score >= levelDef.goal.required) {
+    state.stateMachine = 'cleared';
+    state.clearTimer = 4000;
+    fireLevelClear(state, hooks);
+  }
+
+  if (state.stateMachine === 'cleared') {
+    state.clearTimer -= stepMs;
+    if (state.clearTimer <= 0) {
+      state.currentLevelIdx = (state.currentLevelIdx + 1) % LEVELS.length;
+      state.score = 0;
+      state.inkUsed = 0;
+      state.lines = [];
+      state.orbs = [];
+      state.particles = [];
+      state.stateMachine = 'playing';
+      hooks.hud.showBanner(`LEVEL ${state.currentLevelIdx + 1} START`, state.palette.accent, 2000);
+    }
+  }
 
   // line upkeep
+  let totalInk = 0;
   if (state.settings.lineLife > 0) {
-    // Line life slider is normalized 0..1 with 1.0 ≈ 16 sec fade.
     const fadeMs = Math.max(1, state.settings.lineLife * 16000);
     for (const L of state.lines) {
       L.ageMs += stepMs;
       L.life = Math.max(0, 1 - L.ageMs / fadeMs);
+      if (L.life > 0) {
+        for (let i = 1; i < L.points.length; i++) {
+          totalInk += Math.hypot(L.points[i].x - L.points[i-1].x, L.points[i].y - L.points[i-1].y);
+        }
+      }
     }
     state.lines = state.lines.filter((L) => L.life > 0);
   } else {
-    for (const L of state.lines) { L.life = 1; }
+    for (const L of state.lines) {
+      L.life = 1;
+      for (let i = 1; i < L.points.length; i++) {
+        totalInk += Math.hypot(L.points[i].x - L.points[i-1].x, L.points[i].y - L.points[i-1].y);
+      }
+    }
   }
 
-  // cool down line segment traffic over time (for visuals)
+  // Include active drawing ink
+  if (state.drawing.active && !state.drawing.erasing) {
+    const pts = state.drawing.points;
+    for (let i = 1; i < pts.length; i++) {
+      totalInk += Math.hypot(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y);
+    }
+  }
+  state.inkUsed = totalInk;
+
   decaySegmentTraffic(state, 0.012);
 }
 
-function fireBloom(state: State, hooks: AppHooks) {
-  applyBloomReset(state);
-  state.bloom.count += 1;
-  state.bloom.pulse = 1.0;
-  state.bloom.lastAt = state.timeMs;
-  state.screenFlash = Math.min(1, 0.35 + state.flow.chain * 0.04);
+function fireLevelClear(state: State, hooks: AppHooks) {
+  state.screenFlash = 1.0;
+  state.shakeMag = Math.max(state.shakeMag, 5);
+  state.shakeMs = Math.max(state.shakeMs, 400);
 
-  // shake scales with chain
-  const shakeMag = 2 + state.flow.chain * 1.5;
-  state.shakeMag = Math.max(state.shakeMag, shakeMag);
-  state.shakeMs = Math.max(state.shakeMs, 220 + state.flow.chain * 40);
+  const color = '#00ffaa';
 
-  const name = bloomName(state.flow.chain);
-  const palette = state.palette;
-  const color = palette.colors[state.flow.chain % palette.colors.length];
+  hooks.hud.showBanner(`STAGE CLEAR!`, color, 3000);
+  sfxBloom(hooks.audio, 4); // Big sound
 
-  hooks.hud.showBanner(`${name} ×${state.flow.chain}`, color, 1300 + state.flow.chain * 80);
-
-  sfxBloom(hooks.audio, state.flow.chain);
-
-  // big shockring centered on screen
+  // big shockrings
   state.shocks.push({
     x: state.stage.w / 2,
     y: state.stage.h * 0.45,
     r: 0,
-    targetR: Math.max(state.stage.w, state.stage.h) * 0.45,
+    targetR: Math.max(state.stage.w, state.stage.h),
     life: 0,
     color,
-    thickness: 2.4,
+    thickness: 4.0,
     dashed: false,
-  });
-  state.shocks.push({
-    x: state.stage.w / 2,
-    y: state.stage.h * 0.45,
-    r: 0,
-    targetR: Math.max(state.stage.w, state.stage.h) * 0.7,
-    life: 0,
-    color: '#ffffff',
-    thickness: 1.2,
-    dashed: true,
   });
 
   // particles radiating
-  const n = 90 + state.flow.chain * 14;
+  const n = 150;
   for (let i = 0; i < n; i++) {
     const ang = (i / n) * Math.PI * 2 + Math.random() * 0.4;
-    const speed = 3 + Math.random() * 5 + state.flow.chain * 0.4;
+    const speed = 4 + Math.random() * 8;
     state.particles.push({
       x: state.stage.w / 2,
       y: state.stage.h * 0.45,
       vx: Math.cos(ang) * speed,
       vy: Math.sin(ang) * speed,
-      life: 0.7 + Math.random() * 0.5,
-      size: 2 + Math.random() * 3,
-      color: palette.colors[(i + state.flow.chain) % palette.colors.length],
-      shimmer: state.flow.chain >= 3,
-      kind: i % 7 === 0 ? 'star' : 'dot',
+      life: 1.0 + Math.random() * 1.0,
+      size: 3 + Math.random() * 4,
+      color: state.palette.colors[i % state.palette.colors.length],
+      shimmer: true,
+      kind: i % 5 === 0 ? 'star' : 'dot',
     });
   }
-
-  // popup text floating up
-  state.popups.push({
-    x: state.stage.w / 2,
-    y: state.stage.h * 0.42,
-    vy: -1.1,
-    life: 1,
-    color,
-    text: name,
-    size: 22 + Math.min(28, state.flow.chain * 2),
-  });
-  if (state.flow.chain >= 3) {
-    state.popups.push({
-      x: state.stage.w / 2,
-      y: state.stage.h * 0.42 + 28,
-      vy: -0.7,
-      life: 1.1,
-      color: '#ffffff',
-      text: `CHAIN ×${state.flow.chain}`,
-      size: 14,
-    });
-  }
-
-  // bless a handful of active orbs so the visual celebration carries
-  let blessed = 0;
-  for (const o of state.orbs) {
-    if (blessed >= 6) break;
-    if (o.energy > 0.35 && !o.blessed) {
-      o.blessed = true;
-      o.energy = Math.min(1, o.energy + 0.35);
-      blessed++;
-    }
-  }
-
-  hooks.onBloom?.(state);
 }
 
 /** Externally-triggered spawn sfx hook (used when new orbs appear). */

@@ -3,6 +3,7 @@ import type { Orb } from './balls';
 import { BASE_TRAIL_CAP, BLESSED_TRAIL_CAP } from './balls';
 import type { Line } from './lines';
 import { lerp } from '@/utils/math';
+import { LEVELS } from '@/core/levels';
 
 /**
  * Convert the user gravity slider (0..1) into px/frame² acceleration.
@@ -28,6 +29,16 @@ export function stepPhysics(state: State, dtMs: number): void {
   const g = gravityFromSetting(state.settings.gravity);
   const sub = SUBSTEPS;
   const subG = g / sub;
+
+  const level = LEVELS[state.currentLevelIdx] || LEVELS[0];
+  const { w, h } = state.stage;
+  const minDim = Math.min(w, h);
+  const gx = level.goal.rx * w;
+  const gy = level.goal.ry * h;
+  const gr = level.goal.rr * minDim;
+  const obstacles = level.obstacles.map(obs => ({
+    x: obs.rx * w, y: obs.ry * h, w: obs.rw * w, h: obs.rh * h
+  }));
 
   for (let s = 0; s < sub; s++) {
     // integrate
@@ -61,9 +72,36 @@ export function stepPhysics(state: State, dtMs: number): void {
     // ball-ball
     resolveOrbCollisions(state.orbs);
 
-    // walls / floor
+    // walls / floor / goal / obstacles
     for (const o of state.orbs) {
       if (o.dead) continue;
+
+      // Goal Check
+      const d2 = (o.x - gx) ** 2 + (o.y - gy) ** 2;
+      if (d2 < gr * gr) {
+        o.dead = true;
+        if (state.stateMachine === 'playing') {
+          state.score++;
+        }
+        continue;
+      }
+
+      // Obstacle Check
+      for (const obs of obstacles) {
+        if (o.x > obs.x && o.x < obs.x + obs.w && o.y > obs.y && o.y < obs.y + obs.h) {
+          o.dead = true;
+          // Spawn death particles
+          for(let i=0; i<4; i++) {
+             state.particles.push({
+               x: o.x, y: o.y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5,
+               life: 1, color: '#ff2255', size: 4, kind: 'star', shimmer: false
+             });
+          }
+          break;
+        }
+      }
+      if (o.dead) continue;
+
       const W = state.stage.w;
       const H = state.stage.h;
       if (o.x < o.r) {
@@ -126,15 +164,14 @@ function pushTrail(o: Orb, tick: number) {
 }
 
 /**
- * Collide an orb against every segment of `line`. Returns true if any
- * segment produced contact. Updates segment traffic for visuals.
+ * Collide an orb against every segment of `line`. 
+ * Instead of bouncing, it applies a Vector Flow force parallel to the line.
  */
 function collideOrbLine(o: Orb, line: Line, tick: number): boolean {
   const pts = line.points;
   if (pts.length < 2) return false;
 
   let bestIdx = -1;
-  let bestCx = 0, bestCy = 0;
   let bestDist = Infinity;
 
   for (let i = 0; i < pts.length - 1; i++) {
@@ -150,74 +187,35 @@ function collideOrbLine(o: Orb, line: Line, tick: number): boolean {
     const d2 = (o.x - cx) * (o.x - cx) + (o.y - cy) * (o.y - cy);
     if (d2 < bestDist) {
       bestDist = d2;
-      bestCx = cx;
-      bestCy = cy;
       bestIdx = i;
     }
   }
   if (bestIdx === -1) return false;
-  const distSq = bestDist;
-  const minD = o.r + CONTACT_PAD;
-  if (distSq > minD * minD) return false;
+  
+  // Influence radius of the current
+  const influenceRadius = o.r + 35;
+  if (bestDist > influenceRadius * influenceRadius) return false;
 
   const a = pts[bestIdx], b = pts[bestIdx + 1];
   const dx = b.x - a.x, dy = b.y - a.y;
   const len = Math.sqrt(dx * dx + dy * dy) || 1;
   const tx = dx / len, ty = dy / len;
 
-  // Normal points from line-closest-point to orb (so we resolve outward).
-  let nx = o.x - bestCx;
-  let ny = o.y - bestCy;
-  let nLen = Math.sqrt(nx * nx + ny * ny);
-  if (nLen < 1e-4) {
-    // orb sits exactly on line — push perpendicular to tangent (perpendicular(t) = (-ty, tx))
-    nx = -ty;
-    ny = tx;
-    nLen = 1;
-  } else {
-    nx /= nLen;
-    ny /= nLen;
-  }
+  // Apply flow force
+  const dist = Math.sqrt(bestDist);
+  const falloff = Math.max(0, 1 - (dist / influenceRadius));
+  const force = 0.45 * falloff;
 
-  // Always push orb to the "downhill" side: pick whichever perp side has a downward
-  // component projected onto gravity (so orbs visually rest on top of lines).
-  // We achieve this by taking perpendicular(tangent) toward +y-positive side,
-  // then mixing with the natural normal so orbs that approached from above stay above.
-  let perpX = -ty, perpY = tx;
-  if (perpY < 0) { perpX = -perpX; perpY = -perpY; }
-  // blend with natural normal — keeps both sides supported but biases against intersecting through
-  const blend = 0.65;
-  nx = nx * (1 - blend) + perpX * blend;
-  ny = ny * (1 - blend) + perpY * blend;
-  const bn = Math.sqrt(nx * nx + ny * ny) || 1;
-  nx /= bn; ny /= bn;
-
-  // Resolve penetration
-  const desired = minD - Math.sqrt(distSq);
-  if (desired > 0) {
-    o.x += nx * desired;
-    o.y += ny * desired;
-  }
-
-  // Reflect velocity along normal (tiny bounce) and damp along tangent (friction)
-  const vDotN = o.vx * nx + o.vy * ny;
-  if (vDotN < 0) {
-    o.vx -= (1 + NORMAL_BOUNCE) * vDotN * nx;
-    o.vy -= (1 + NORMAL_BOUNCE) * vDotN * ny;
-  }
+  o.vx += tx * force;
+  o.vy += ty * force;
+  
+  // Dampen perpendicular velocity so orbs get sucked into the stream
   const vDotT = o.vx * tx + o.vy * ty;
-  // assist a little along tangent so orbs don't get stuck on flat sections
-  let assist = 0;
-  // If tangent points downhill (ty>0 since gravity is +y), give a tiny shove.
-  if (ty > 0.05) assist = 0.06 * ty;
-  else if (ty < -0.05) assist = 0.04 * ty * 0.4; // gentler against gravity
-
-  // friction: damp tangent velocity slightly
-  const newTan = vDotT * LINE_FRICTION + assist;
-  // re-derive vx/vy from (newTan along tangent) + (clipped normal component)
-  const normN = Math.max(0, o.vx * nx + o.vy * ny); // away from line OK
-  o.vx = tx * newTan + nx * normN;
-  o.vy = ty * newTan + ny * normN;
+  const nx = -ty, ny = tx;
+  const vDotN = o.vx * nx + o.vy * ny;
+  
+  o.vx = tx * vDotT + nx * vDotN * 0.94;
+  o.vy = ty * vDotT + ny * vDotN * 0.94;
 
   // ledger
   line.seg[bestIdx].traffic = Math.min(1, line.seg[bestIdx].traffic + 0.045);

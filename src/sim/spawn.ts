@@ -1,6 +1,7 @@
 import type { State } from '@/core/state';
 import { makeOrb, MAX_ORBS } from './balls';
 import { lerp } from '@/utils/math';
+import { LEVELS } from '@/core/levels';
 
 /**
  * Where orbs come from. We support a single primary fountain near the
@@ -67,14 +68,20 @@ export function spawnOrbNow(state: State, sp: Spawner) {
 
 /**
  * Drive the spawn loop. Called from sim step with dtMs.
+ * Spawns according to the current level definition.
  */
 export function tickSpawner(state: State, dtMs: number): void {
-  const rate = spawnRatePerSec(state.settings.spawnRate);
-  if (rate <= 0) return;
-  state.spawnAcc += dtMs * 0.001 * rate;
-  const sp = spawnerForStage(state);
-  while (state.spawnAcc >= 1) {
-    state.spawnAcc -= 1;
-    spawnOrbNow(state, sp);
+  const levelDef = LEVELS[state.currentLevelIdx] || LEVELS[0];
+  const { w, h } = state.stage;
+  
+  for (const spawnerDef of levelDef.spawners) {
+    if (Math.random() < spawnerDef.rate) {
+      const sp: Spawner = {
+        x: spawnerDef.rx * w,
+        y: spawnerDef.ry * h,
+        spread: w * 0.05 // 5% of screen width spread
+      };
+      spawnOrbNow(state, sp);
+    }
   }
 }
