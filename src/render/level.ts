@@ -19,23 +19,29 @@ export function drawLevel(ctx: CanvasRenderingContext2D, state: State): void {
   const pulse = Math.sin(state.timeMs * 0.005) * 0.5 + 0.5;
   const progress = Math.min(1, state.score / level.goal.required);
   
-  ctx.strokeStyle = progress >= 1 ? '#00ffaa' : state.palette.accent;
+  const colorStr = progress >= 1 ? '#fcee0a' : state.palette.accent;
+  ctx.strokeStyle = colorStr;
   ctx.lineWidth = 4 + pulse * 2;
-  ctx.shadowColor = ctx.strokeStyle;
-  ctx.shadowBlur = 15 + pulse * 15;
+  ctx.shadowColor = colorStr;
+  ctx.shadowBlur = 20 + pulse * 20;
+  
+  // Cyberpunk goal node
+  ctx.strokeRect(gx - gr, gy - gr, gr * 2, gr * 2);
+  
+  ctx.beginPath();
+  ctx.moveTo(gx, gy - gr*1.2);
+  ctx.lineTo(gx + gr*1.2, gy);
+  ctx.lineTo(gx, gy + gr*1.2);
+  ctx.lineTo(gx - gr*1.2, gy);
+  ctx.closePath();
   ctx.stroke();
   
   // Goal fill based on progress
-  ctx.beginPath();
-  ctx.arc(gx, gy, gr * progress, 0, Math.PI * 2);
-  ctx.fillStyle = ctx.strokeStyle;
-  ctx.globalAlpha = 0.3;
-  ctx.fill();
-  ctx.globalAlpha = 1.0;
+  ctx.fillRect(gx - gr, gy + gr - (gr * 2 * progress), gr * 2, gr * 2 * progress);
   
   // Progress text
   ctx.fillStyle = '#fff';
-  ctx.shadowBlur = 0;
+  ctx.shadowBlur = 5;
   ctx.font = 'bold 20px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

@@ -4,14 +4,14 @@
    ================================================================= */
 
 :root {
-  --bg-0: #05020a;
-  --bg-1: #0a0514;
-  --bg-2: #140828;
+  --bg-0: #050205;
+  --bg-1: #0a0508;
+  --bg-2: #140810;
 
   --cyan:   #00f0ff;
-  --pink:   #ff2d96;
-  --yellow: #fff04f;
-  --green:  #3fff88;
+  --pink:   #ff0055;
+  --yellow: #fcee0a;
+  --green:  #39ff14;
   --orange: #ff9a30;
   --purple: #b24bff;
   --indigo: #6d40ff;
@@ -89,56 +89,55 @@ button {
 }
 
 .stat {
-  background: rgba(10, 5, 20, 0.72);
-  border: 1px solid rgba(255, 179, 0, 0.4);
-  border-radius: 4px;
+  background: rgba(5, 2, 5, 0.85);
+  border: 1px solid var(--cyan);
+  border-left: 4px solid var(--cyan);
+  border-radius: 0;
   padding: 12px 18px;
   min-width: 180px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: inset 0 0 10px rgba(255, 179, 0, 0.1), 0 0 20px rgba(255, 179, 0, 0.1);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
 }
 .stat-label {
   font-size: 14px;
   letter-spacing: 4px;
-  color: var(--text-m);
+  color: var(--cyan);
 }
 .stat-val {
   font-size: 24px;
   font-weight: 900;
-  color: var(--gold);
-  text-shadow: 0 0 10px var(--gold);
+  color: var(--pink);
+  text-shadow: 2px 0 0 var(--cyan), -2px 0 0 var(--yellow);
 }
 
 /* ------- TAJIMANIA Meter ------- */
 .meter {
-  background: rgba(10, 5, 20, 0.8);
-  border: 1px solid rgba(0, 240, 255, 0.5);
-  border-radius: 4px;
+  background: rgba(5, 2, 5, 0.85);
+  border: 1px solid var(--pink);
+  border-right: 4px solid var(--pink);
+  border-radius: 0;
   padding: 12px 16px;
   min-width: 300px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 20px rgba(255, 0, 85, 0.2);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
 }
 .meter-label {
   font-size: 14px;
   letter-spacing: 6px;
-  color: var(--cyan);
-  text-shadow: 0 0 8px var(--cyan);
+  color: var(--yellow);
+  text-shadow: 0 0 8px var(--yellow);
   margin-bottom: 8px;
   font-weight: bold;
 }
 .meter-bar {
   height: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
   position: relative;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .meter-fill {
   height: 100%;
@@ -176,16 +175,52 @@ button {
   margin: 0;
   position: relative;
   text-shadow: 0 0 20px var(--cyan), 0 0 60px var(--cyan);
-  animation: float 4s ease-in-out infinite;
+}
+
+.glitch-text::before, .glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.glitch-text::before {
+  left: 4px;
+  text-shadow: -2px 0 var(--pink);
+  animation: glitch-anim 2s infinite linear alternate-reverse;
+  clip-path: polygon(0 0, 100% 0, 100% 30%, 0 30%);
+}
+
+.glitch-text::after {
+  left: -4px;
+  text-shadow: -2px 0 var(--cyan);
+  animation: glitch-anim 3s infinite linear alternate-reverse;
+  clip-path: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
+}
+
+@keyframes glitch-anim {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-2px, -1px); }
+  80% { transform: translate(2px, 1px); }
+  100% { transform: translate(0); }
 }
 
 .subtitle {
   font-size: 16px;
   letter-spacing: 16px;
-  color: var(--gold);
-  text-shadow: 0 0 10px var(--gold);
+  color: var(--yellow);
+  text-shadow: 2px 0 0 var(--pink), -2px 0 0 var(--cyan);
   margin-top: 10px;
   margin-bottom: 60px;
+  background: rgba(0,0,0,0.5);
+  padding: 5px;
+  display: inline-block;
+  border: 1px solid var(--yellow);
 }
 
 .btn-start {
@@ -194,25 +229,23 @@ button {
   font-size: 18px;
   letter-spacing: 12px;
   color: #000;
-  background: var(--cyan);
-  border: 1px solid var(--cyan);
-  border-radius: 4px;
-  box-shadow: 0 0 30px var(--cyan), 0 0 80px rgba(0, 240, 255, 0.6),
-              inset 0 0 20px rgba(255, 255, 255, 0.6);
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: var(--yellow);
+  border: 2px solid var(--yellow);
+  box-shadow: 4px 4px 0 var(--pink);
+  transition: all 0.1s ease-out;
+  cursor: pointer;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
 }
 .btn-start:hover {
   background: #fff;
-  color: #000;
-  box-shadow: 0 0 50px var(--cyan), 0 0 100px rgba(0, 240, 255, 0.8);
-  transform: scale(1.05);
+  border-color: #fff;
+  box-shadow: 8px 8px 0 var(--cyan);
+  transform: translate(-4px, -4px);
 }
-.btn-start:active { transform: scale(0.95); }
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+.btn-start:active { 
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--cyan);
 }
 
 /* ------- flash overlay ------- */

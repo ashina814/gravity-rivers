@@ -27,37 +27,46 @@ export function drawOrbs(ctx: CanvasRenderingContext2D, state: State): void {
     ctx.save();
     ctx.shadowColor = col;
     ctx.shadowBlur = (14 + o.energy * 20) * dpr;
-    ctx.fillStyle = rgba(col, 0.22 + o.energy * 0.2);
+    ctx.fillStyle = rgba(col, 0.15 + o.energy * 0.2);
     ctx.beginPath();
-    ctx.arc(o.x, o.y, r * (1.6 + o.energy * 0.5), 0, Math.PI * 2);
+    // Hexagon aura
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 + o.id;
+      const hx = o.x + Math.cos(angle) * r * (1.8 + o.energy * 0.5);
+      const hy = o.y + Math.sin(angle) * r * (1.8 + o.energy * 0.5);
+      if (i === 0) ctx.moveTo(hx, hy);
+      else ctx.lineTo(hx, hy);
+    }
+    ctx.closePath();
     ctx.fill();
     ctx.restore();
 
-    // body
+    // core
     ctx.save();
     ctx.shadowColor = col;
-    ctx.shadowBlur = 8 * dpr;
-    ctx.fillStyle = col;
+    ctx.shadowBlur = 10 * dpr;
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(o.x, o.y, r, 0, Math.PI * 2);
+    ctx.arc(o.x, o.y, r * 0.4, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // rim
+    // wireframe rim (hexagon)
     ctx.save();
-    ctx.strokeStyle = rgba(shade(baseColor, -30), 0.7);
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 5 * dpr;
     ctx.beginPath();
-    ctx.arc(o.x, o.y, r * 0.95, 0, Math.PI * 2);
+    for (let i = 0; i < 6; i++) {
+      const angle = (i * Math.PI) / 3 + tick * 0.05 * (o.id % 2 === 0 ? 1 : -1);
+      const hx = o.x + Math.cos(angle) * r;
+      const hy = o.y + Math.sin(angle) * r;
+      if (i === 0) ctx.moveTo(hx, hy);
+      else ctx.lineTo(hx, hy);
+    }
+    ctx.closePath();
     ctx.stroke();
-    ctx.restore();
-
-    // highlight
-    ctx.save();
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.beginPath();
-    ctx.arc(o.x - r * 0.35, o.y - r * 0.35, r * 0.28, 0, Math.PI * 2);
-    ctx.fill();
     ctx.restore();
 
     // spawn pop ring

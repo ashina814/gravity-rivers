@@ -32,55 +32,53 @@ function drawOneLine(
   const alpha = Math.max(0, Math.min(1, L.life));
   if (alpha <= 0) return;
 
-  // Outer halo pass — single stroke, wide + low-alpha glow
+  // Outer neon glow
   ctx.save();
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = rgba(accent, 0.18 * alpha);
-  ctx.lineWidth = 10;
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.strokeStyle = rgba(accent, 0.4 * alpha);
+  ctx.lineWidth = 14;
   ctx.shadowColor = accent;
-  // shadowBlur is specified in coordinate-space units; keep it DPR-scaled
-  // so the glow radius matches what players see on HiDPI displays.
-  ctx.shadowBlur = 22 * dpr;
+  ctx.shadowBlur = 30 * dpr;
   strokePath(ctx, pts);
   ctx.restore();
 
-  // Core pass — per-segment so we can tint high-traffic bits brighter
+  // Core rail background
   ctx.save();
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.shadowColor = accent;
-  ctx.shadowBlur = 10 * dpr;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const a = pts[i], b = pts[i + 1];
-    const t = L.seg[i]?.traffic ?? 0;
-    const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-    const hot = Math.min(1, t * 1.6);
-    // base + traffic-tinted warm color
-    g.addColorStop(0, rgba(blendHot(accent, hot), 0.8 * alpha));
-    g.addColorStop(1, rgba(blendHot(accent, hot), 0.9 * alpha));
-    ctx.strokeStyle = g;
-    ctx.lineWidth = 3.2 + hot * 2.2;
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
-  }
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.strokeStyle = `rgba(0, 0, 0, ${0.8 * alpha})`;
+  ctx.lineWidth = 10;
+  strokePath(ctx, pts);
   ctx.restore();
 
-  // Inner highlight pass — flowing arrows/dashed line
+  // Cyberpunk Data Stream (moving dashed line)
   ctx.save();
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 * alpha})`;
-  ctx.lineWidth = 2.0;
-  ctx.shadowColor = 'rgba(255,255,255,0.6)';
-  ctx.shadowBlur = 4 * dpr;
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.strokeStyle = `rgba(255, 255, 255, ${0.9 * alpha})`;
+  ctx.lineWidth = 4.0;
+  ctx.shadowColor = '#fff';
+  ctx.shadowBlur = 8 * dpr;
   
-  // Make it flow!
-  ctx.setLineDash([12, 18]);
-  ctx.lineDashOffset = -state.timeMs * 0.12;
+  // Fast, aggressive data flow
+  ctx.setLineDash([20, 10, 5, 10]);
+  ctx.lineDashOffset = -state.timeMs * 0.4;
   
+  strokePath(ctx, pts);
+  ctx.restore();
+
+  // Rail edges
+  ctx.save();
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.strokeStyle = rgba(accent, 0.9 * alpha);
+  ctx.lineWidth = 1.5;
+  
+  // Draw parallel rails by shifting context slightly (hacky but works for rough rails)
+  ctx.translate(3, 3);
+  strokePath(ctx, pts);
+  ctx.translate(-6, -6);
   strokePath(ctx, pts);
   ctx.restore();
 
