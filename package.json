@@ -1,0 +1,17 @@
+{
+  "name": "gravity-rivers",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A neon CRT visual toy — draw rivers of gravity, watch colored orbs flow.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}
