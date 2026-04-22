@@ -204,6 +204,7 @@ export function sfxClick(engine: AudioEngine): void {
   g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
   o.connect(g);
   g.connect(engine.master);
+  o.start(t);
   o.stop(t + 0.06);
 }
 
@@ -253,3 +254,52 @@ export function sfxSlash(engine: AudioEngine, charge: number): void {
   }
 }
 
+export function sfxExplode(engine: AudioEngine, charge: number): void {
+  if (!engine.ensure() || !engine.ctx || !engine.master) return;
+  const ctx = engine.ctx;
+  const t = now(engine);
+
+  const bufferSize = ctx.sampleRate;
+  const noise = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = noise.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = noise;
+
+  const f = ctx.createBiquadFilter();
+  f.type = 'lowpass';
+  f.frequency.setValueAtTime(3000 + charge * 2000, t);
+  f.frequency.exponentialRampToValueAtTime(100, t + 0.3);
+
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.3 + charge * 0.3, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+
+  src.connect(f);
+  f.connect(g);
+  g.connect(engine.master);
+  src.start(t);
+  src.stop(t + 0.45);
+}
+
+export function sfxPlayerHit(engine: AudioEngine): void {
+  if (!engine.ensure() || !engine.ctx || !engine.master) return;
+  const ctx = engine.ctx;
+  const t = now(engine);
+
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(300, t);
+  o.frequency.exponentialRampToValueAtTime(30, t + 0.3);
+
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.6, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+
+  o.connect(g);
+  g.connect(engine.master);
+  o.start(t);
+  o.stop(t + 0.6);
+}

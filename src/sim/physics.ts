@@ -1,9 +1,12 @@
 import type { State, Enemy } from '@/core/state';
+import type { AudioEngine } from '@/audio/audio';
+import { sfxExplode, sfxPlayerHit } from '@/audio/sfx';
 
-function damagePlayer(state: State) {
+function damagePlayer(state: State, audio?: AudioEngine) {
   if (state.player.invulnTimer > 0) return;
   state.player.lives--;
   state.combo = 0;
+  if (audio) sfxPlayerHit(audio);
   state.shakeMag = 80;
   state.shakeMs = 600;
   state.screenFlash = 1.0;
@@ -33,7 +36,7 @@ function damagePlayer(state: State) {
   }
 }
 
-export function stepPhysics(state: State, stepMs: number) {
+export function stepPhysics(state: State, stepMs: number, audio?: AudioEngine) {
   if (state.stateMachine === 'gameover') {
      // Freeze physics when dead, but maybe let particles fly
      for (const p of state.particles) {
@@ -203,6 +206,8 @@ export function stepPhysics(state: State, stepMs: number) {
           if (e.hp <= 0 || e.type !== 'boss') { // Normal enemies always die instantly
             e.dead = true;
             
+            if (audio) sfxExplode(audio, p.charge);
+
             state.killSplashes.push({
                x: e.x, y: e.y, timer: 1.0, color: p.charge > 0.8 ? '#ff0055' : '#ffffff'
             });
@@ -291,7 +296,7 @@ export function stepPhysics(state: State, stepMs: number) {
     const distToPlayer = Math.hypot(p.x - proj.x, p.y - proj.y);
     if (distToPlayer < 10 && p.state !== 'attacking') {
       proj.dead = true;
-      damagePlayer(state);
+      damagePlayer(state, audio);
     }
   }
   
@@ -313,7 +318,7 @@ export function stepPhysics(state: State, stepMs: number) {
         e.vy += ((dy / distToPlayer) * speed - e.vy) * 0.1;
       }
       if (distToPlayer < e.r + 10 && p.state !== 'attacking') {
-        damagePlayer(state);
+        damagePlayer(state, audio);
       }
     } 
     else if (e.type === 'skull') {
@@ -348,7 +353,7 @@ export function stepPhysics(state: State, stepMs: number) {
       }
       
       if (distToPlayer < e.r + 10 && p.state !== 'attacking') {
-        damagePlayer(state);
+        damagePlayer(state, audio);
       }
     } 
     else if (e.type === 'boss') {
@@ -359,7 +364,7 @@ export function stepPhysics(state: State, stepMs: number) {
         e.vy += ((dy / distToPlayer) * speed - e.vy) * 0.1;
       }
       if (distToPlayer < e.r + 10 && p.state !== 'attacking') {
-        damagePlayer(state);
+        damagePlayer(state, audio);
       }
     }
     

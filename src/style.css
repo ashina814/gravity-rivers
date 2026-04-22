@@ -147,8 +147,12 @@ button {
   100% { opacity: 1; transform: scale(1); }
 }
 .title-screen.booting {
-  opacity: 0;
+  animation: title-exit 0.4s ease-in forwards;
   pointer-events: none;
+}
+@keyframes title-exit {
+  0% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  100% { opacity: 0; transform: scale(1.1); filter: brightness(2); }
 }
 .title-content {
   text-align: center;

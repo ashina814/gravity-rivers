@@ -84,5 +84,5 @@ function simStep(state: State, stepMs: number, hooks: AppHooks) {
      tickSpawner(state, stepMs);
   }
 
-  stepPhysics(state, stepMs);
+  stepPhysics(state, stepMs, hooks.audio);
 }
