@@ -13,7 +13,7 @@ export function stepPhysics(state: State, stepMs: number) {
   }
 
   const p = state.player;
-  const dt = state.slowMo > 0 ? stepMs * 0.1 : stepMs;
+  let dt = state.slowMo > 0 ? stepMs * 0.1 : stepMs;
   if (state.slowMo > 0) state.slowMo--;
 
   if (state.freezeFrames > 0) {
