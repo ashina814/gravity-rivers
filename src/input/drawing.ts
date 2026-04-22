@@ -1,6 +1,6 @@
 import type { State } from '@/core/state';
 import type { AudioEngine } from '@/audio/audio';
-import { sfxClick } from '@/audio/sfx';
+import { sfxSlash } from '@/audio/sfx';
 
 export function attachDrawing(canvas: HTMLCanvasElement, state: State, audio: AudioEngine): void {
   function toStage(ex: number, ey: number) {
@@ -32,7 +32,7 @@ export function attachDrawing(canvas: HTMLCanvasElement, state: State, audio: Au
     if (state.player.state === 'charging') {
       state.player.state = 'attacking';
       state.player.attackTimer = 15; // 15 frames of attack/recovery
-      sfxClick(audio); // Attack sound placeholder
+      sfxSlash(audio, state.player.charge);
     }
   }
 

@@ -135,8 +135,16 @@ button {
   justify-content: center;
   align-items: center;
   z-index: 20;
-  background: radial-gradient(circle at center, #140810 0%, #050205 100%);
-  transition: opacity 0.5s ease-out;
+  /* Dark gradient with subtle purple hue */
+  background: radial-gradient(circle at center, #200020 0%, #0a0010 60%, #020000 100%);
+  /* Entrance fade‑in & scale */
+  animation: title-entrance 1.2s ease-out forwards;
+  overflow: hidden;
+}
+
+@keyframes title-entrance {
+  0% { opacity: 0; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
 }
 .title-screen.booting {
   opacity: 0;
@@ -147,25 +155,40 @@ button {
 }
 
 .glitch-text {
-  font-size: 110px;
+  font-size: 120px;
   font-weight: 900;
-  letter-spacing: 4px;
-  color: var(--text);
+  letter-spacing: 6px;
+  color: #fff;
   margin: 0;
   position: relative;
   text-transform: uppercase;
-  animation: title-glitch 5s infinite;
+  animation: title-glitch 4s infinite;
+  text-shadow:
+    0 0 8px rgba(255,255,255,0.8),
+    0 0 20px rgba(255,0,150,0.6),
+    0 0 30px rgba(0,255,255,0.6);
 }
 
 .glitch-text::before, .glitch-text::after {
   content: attr(data-text);
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   width: 100%;
   height: 100%;
   background: transparent;
-  opacity: 0.8;
+  opacity: 0.7;
+}
+
+.glitch-text::before {
+  color: #0ff;
+  z-index: -1;
+  animation: glitch-anim-1 4s infinite;
+}
+
+.glitch-text::after {
+  color: #f0f;
+  z-index: -2;
+  animation: glitch-anim-2 3s infinite reverse;
 }
 
 .glitch-text::before {
@@ -204,47 +227,56 @@ button {
 }
 
 .subtitle {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 900;
-  letter-spacing: 12px;
-  color: var(--yellow);
-  margin-top: 10px;
-  margin-bottom: 60px;
+  letter-spacing: 14px;
+  color: #ff0055;
+  margin-top: 12px;
+  margin-bottom: 80px;
   display: inline-block;
+  text-shadow: 0 0 6px rgba(255,0,85,0.8);
+  animation: subtitle-fade 2s infinite alternate;
+}
+
+@keyframes subtitle-fade {
+  from { opacity: 0.6; transform: translateY(0); }
+  to   { opacity: 1;   transform: translateY(-4px); }
 }
 
 .btn-start {
-  padding: 16px 60px;
+  padding: 18px 70px;
   font-weight: 900;
-  font-size: 24px;
-  letter-spacing: 8px;
+  font-size: 26px;
+  letter-spacing: 10px;
   color: #fff;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  transition: all 0.2s;
+  border: 2px solid rgba(255,255,255,0.5);
+  transition: all 0.25s ease;
   cursor: pointer;
   text-transform: uppercase;
   position: relative;
   overflow: hidden;
 }
+
 .btn-start::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: #fff;
+  inset: 0;
+  background: linear-gradient(45deg, #ff0055, #00fff5);
   transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  transform-origin: left;
+  transition: transform 0.4s ease;
   z-index: -1;
 }
+
 .btn-start:hover {
   color: #000;
   border-color: #fff;
-  letter-spacing: 12px;
+  letter-spacing: 14px;
 }
+
 .btn-start:hover::before {
   transform: scaleX(1);
-  transform-origin: left;
 }
 .btn-start:active { 
   transform: scale(0.95);

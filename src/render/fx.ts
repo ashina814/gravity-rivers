@@ -39,6 +39,28 @@ export function drawFx(ctx: CanvasRenderingContext2D, state: State): void {
     ctx.restore();
   }
 
+  // kill splashes
+  for (const ks of state.killSplashes) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, ks.timer);
+    ctx.translate(ks.x, ks.y);
+    const scale = 1 + (1 - ks.timer) * 1.5;
+    ctx.scale(scale, scale);
+    ctx.fillStyle = ks.color;
+    ctx.beginPath();
+    for(let i=0; i<8; i++) {
+       const angle = (i/8) * Math.PI * 2;
+       // We use a fixed pseudo-randomness based on position so it doesn't jitter frame-by-frame
+       const rnd = Math.abs(Math.sin(ks.x * 12.34 + ks.y * 56.78 + i * 90.12));
+       const r = 20 + rnd * 40 * ks.timer;
+       if (i===0) ctx.moveTo(Math.cos(angle)*r, Math.sin(angle)*r);
+       else ctx.lineTo(Math.cos(angle)*r, Math.sin(angle)*r);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   // particles
   for (const p of state.particles) {
     ctx.save();
@@ -131,6 +153,11 @@ export function updateFx(state: State, dtMs: number): void {
     sw.life += 0.02 * dt;
   }
   state.shocks = state.shocks.filter((sw) => sw.life < 1);
+
+  for (const ks of state.killSplashes) {
+    ks.timer -= 0.03 * dt;
+  }
+  state.killSplashes = state.killSplashes.filter((ks) => ks.timer > 0);
 
   if (state.screenFlash > 0) state.screenFlash = Math.max(0, state.screenFlash - 0.04 * dt);
   if (state.shakeMs > 0) {

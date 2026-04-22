@@ -203,6 +203,10 @@ export function stepPhysics(state: State, stepMs: number) {
           if (e.hp <= 0 || e.type !== 'boss') { // Normal enemies always die instantly
             e.dead = true;
             
+            state.killSplashes.push({
+               x: e.x, y: e.y, timer: 1.0, color: p.charge > 0.8 ? '#ff0055' : '#ffffff'
+            });
+            
             state.combo++;
             state.maxCombo = Math.max(state.maxCombo, state.combo);
             state.score += 100 * state.combo;

@@ -39,6 +39,14 @@ export interface Enemy {
   type: 'gear' | 'skull' | 'boss';
 }
 
+// Visual effect for enemy death splashes
+export interface KillSplash {
+  x: number;
+  y: number;
+  timer: number; // 0..1 (fade)
+  color: string;
+}
+
 export interface SlashLine {
   x1: number; y1: number;
   x2: number; y2: number;
@@ -83,6 +91,7 @@ export interface State {
   popups: Popup[];
   flashes: Flash[];
   shocks: ShockRing[];
+  killSplashes: KillSplash[]; // new field for death splashes
   screenFlash: number;      
   slowMo: number;           
   
@@ -136,6 +145,7 @@ export function makeState(settings: Settings, palette: Palette): State {
     popups: [],
     flashes: [],
     shocks: [],
+    killSplashes: [],
     screenFlash: 0,
     slowMo: 0,
     

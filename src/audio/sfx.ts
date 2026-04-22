@@ -204,6 +204,52 @@ export function sfxClick(engine: AudioEngine): void {
   g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
   o.connect(g);
   g.connect(engine.master);
-  o.start(t);
   o.stop(t + 0.06);
 }
+
+export function sfxSlash(engine: AudioEngine, charge: number): void {
+  if (!engine.ensure() || !engine.ctx || !engine.master) return;
+  const ctx = engine.ctx;
+  const t = now(engine);
+  
+  // Sharp noise burst for the cut
+  const bufferSize = ctx.sampleRate;
+  const noise = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = noise.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = noise;
+  
+  const f = ctx.createBiquadFilter();
+  f.type = 'highpass';
+  f.frequency.setValueAtTime(800 - charge * 400, t);
+  f.frequency.exponentialRampToValueAtTime(8000, t + 0.1);
+  
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.3 + charge * 0.4, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.15 + charge * 0.1);
+  
+  src.connect(f);
+  f.connect(g);
+  g.connect(engine.master);
+  src.start(t);
+  src.stop(t + 0.3);
+
+  // Deep metallic sub-thud for impact
+  if (charge > 0.5) {
+     const o = ctx.createOscillator();
+     const og = ctx.createGain();
+     o.type = 'square';
+     o.frequency.setValueAtTime(150, t);
+     o.frequency.exponentialRampToValueAtTime(20, t + 0.1);
+     og.gain.setValueAtTime(0, t);
+     og.gain.linearRampToValueAtTime(0.4, t + 0.01);
+     og.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+     o.connect(og);
+     og.connect(engine.master);
+     o.start(t);
+     o.stop(t + 0.25);
+  }
+}
+
