@@ -69,19 +69,21 @@ export function stepPhysics(state: State, stepMs: number) {
   if (p.state === 'attacking') {
     p.attackTimer -= (dt / 16);
     
-    if (p.attackTimer > 14) {
+    // Dashing phase
+    if (p.attackTimer > 10) {
        const dx = p.target.x - p.x;
        const dy = p.target.y - p.y;
        const dist = Math.hypot(dx, dy);
        if (dist > 0) {
-          const dashSpeed = 15 + p.charge * 20;
+          const dashSpeed = 30 + p.charge * 80;
           p.x += (dx / dist) * dashSpeed;
           p.y += (dy / dist) * dashSpeed;
        }
     }
 
-    if (p.attackTimer > 11 && p.attackTimer <= 15) {
-      const attackRadius = 40 + p.charge * 60;
+    // Damage phase
+    if (p.attackTimer > 8 && p.attackTimer <= 15) {
+      const attackRadius = 60 + p.charge * 80;
       let killedThisFrame = 0;
       
       for (const e of state.enemies) {
@@ -117,11 +119,11 @@ export function stepPhysics(state: State, stepMs: number) {
       }
 
       if (killedThisFrame >= 3) {
-        state.freezeFrames = 15;
-        state.monochromeFrames = 30; // 0.5 sec of monochrome
-        state.bgmMuffled = 30;
-        state.shakeMag = 60;
-        state.shakeMs = 300;
+        state.freezeFrames = 4; // ultra sharp freeze
+        state.monochromeFrames = 10; // ultra sharp monochrome
+        state.bgmMuffled = 20;
+        state.shakeMag = 50;
+        state.shakeMs = 200;
         state.popups.push({
           x: p.x, y: p.y - 60,
           vy: -1, life: 1.5, color: '#ff9a30', text: 'SHATTER!!', size: 48
@@ -223,7 +225,8 @@ export function stepPhysics(state: State, stepMs: number) {
         
         if (e.type === 'boss') {
            // SF6 Drive Impact Style Hitstop
-           state.freezeFrames = 30; // heavy hitstop
+           state.freezeFrames = 15; // heavy hitstop
+           state.monochromeFrames = 20; // adding monochrome for boss dodge
            state.bgmMuffled = 60; // muffle BGM
            state.shakeMag = 60;
            state.shakeMs = 600;

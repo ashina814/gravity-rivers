@@ -33,12 +33,8 @@
           <h1 class="glitch-text" data-text="TAJIMANIA">TAJIMANIA</h1>
           <div class="subtitle">STEAMPUNK BRAWLER</div><br>
           <button id="btn-start" class="btn-start">SYSTEM START</button>
-          
-          <div class="tutorial-text">
-            <p><span class="key">MOVE</span> ポインターへ自動追従</p>
-            <p><span class="key">SLASH</span> 長押しチャージ ➔ 離して一閃</p>
-            <p><span class="key">JUST DODGE</span> ボスの突進をギリギリで回避</p>
-          </div>
+          <br><br>
+          <button id="btn-tutorial-open" class="btn-secondary">HOW TO PLAY</button>
         </div>
       </section>
 
@@ -83,6 +79,21 @@
       </div>
 
       <!-- dock removed for Issen mode -->
+
+      <!-- Tutorial panel -->
+      <section class="panel hidden" id="panel-tutorial" role="dialog" aria-hidden="true">
+        <header class="panel-head">
+          <div class="panel-title">HOW TO PLAY</div>
+          <button class="panel-close" id="btn-tutorial-close" aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <div class="tutorial-text" style="margin-top: 0;">
+            <p><span class="key">MOVE</span> ポインターへ自動追従</p>
+            <p><span class="key">SLASH</span> 長押しチャージ ➔ 離して一閃</p>
+            <p><span class="key">JUST DODGE</span> ボスの突進をギリギリで回避</p>
+          </div>
+        </div>
+      </section>
 
       <!-- settings panel -->
       <section class="panel hidden" id="panel-settings" role="dialog" aria-hidden="true">

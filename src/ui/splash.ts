@@ -15,6 +15,14 @@ export function bindSplash(): SplashRuntime {
   if (!btn) throw new Error('Missing #btn-start');
   const hud = document.getElementById('hud');
 
+  const tutBtn = document.getElementById('btn-tutorial-open');
+  const tutClose = document.getElementById('btn-tutorial-close');
+  const tutPanel = document.getElementById('panel-tutorial');
+  if (tutBtn && tutClose && tutPanel) {
+    tutBtn.addEventListener('click', () => tutPanel.classList.remove('hidden'));
+    tutClose.addEventListener('click', () => tutPanel.classList.add('hidden'));
+  }
+
   let fired = false;
   let cb: (() => void) | null = null;
 
