@@ -48,7 +48,7 @@ function boot(): void {
       // Update screen shake
       if (s.shakeMs > 0) {
         s.shakeMs -= s.lastFrameMs;
-        const mag = s.shakeMag * (s.shakeMs / 200); // 200ms default fade
+        const mag = s.shakeMag * (s.shakeMs / 200); 
         const ox = (Math.random() - 0.5) * mag * 2 * dpr;
         const oy = (Math.random() - 0.5) * mag * 2 * dpr;
         ctx.setTransform(dpr, 0, 0, dpr, ox, oy);
@@ -59,7 +59,29 @@ function boot(): void {
 
       ctx.clearRect(0, 0, w, h);
       renderScene(ctx, s);
+      
+      // Game Over Screen trigger
+      if (s.stateMachine === 'gameover') {
+         const goScreen = document.getElementById('gameover-screen');
+         if (goScreen && goScreen.classList.contains('hidden')) {
+           goScreen.classList.remove('hidden');
+           document.getElementById('go-score')!.textContent = String(s.score);
+           document.getElementById('go-combo')!.textContent = String(s.maxCombo);
+           hudEls.hint.style.display = 'none';
+         }
+      }
     },
+  });
+
+  // Game Over Actions
+  document.getElementById('btn-restart')?.addEventListener('click', () => {
+    location.reload(); // Simple reboot
+  });
+  
+  document.getElementById('btn-share')?.addEventListener('click', () => {
+    const text = `TAJIMANIAでスコア ${state.score} (MAX COMBO: ${state.maxCombo}) を叩き出した！\n#TAJIMANIA #スチームパンク`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
   });
 
   splash.onStart(() => startSession(state, splash, bgm, audio));

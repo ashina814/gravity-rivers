@@ -1,16 +1,17 @@
 /* =================================================================
-   TAJIMANIA — stylesheet (TikTok Glitch / Cyberpunk Bachi-Bachi)
+   TAJIMANIA — stylesheet (Steampunk / Astral Chain Title)
    ================================================================= */
 
 :root {
-  --bg-0: #010101;
-  --bg-1: #0a0a0a;
+  --bg-0: #050205;
+  --bg-1: #0a0508;
 
-  /* TikTok Glitch Colors */
-  --tt-pink: #FE2C55;
-  --tt-cyan: #25F4EE;
+  --cyan:   #00f0ff;
+  --pink:   #ff0055;
+  --yellow: #fcee0a;
+  --purple: #b24bff;
+  --orange: #ff9a30;
   
-  --yellow:  #fcee0a;
   --text:    #ffffff;
   --text-dim:#888888;
 
@@ -18,7 +19,6 @@
   --font: var(--mono);
 }
 
-/* ------- reset ------- */
 *, *::before, *::after { box-sizing: border-box; }
 html, body {
   height: 100%;
@@ -42,7 +42,6 @@ button {
   cursor: pointer;
 }
 
-/* ------- stage / canvas ------- */
 #stage {
   position: fixed;
   inset: 0;
@@ -85,28 +84,17 @@ button {
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.2em;
-  color: var(--text);
-  text-shadow: 2px 2px 0 var(--tt-pink), -2px -2px 0 var(--tt-cyan);
+  color: var(--text-dim);
   text-transform: uppercase;
 }
 .stat-val {
   font-size: 32px;
   font-weight: 900;
-  color: var(--text);
-  text-shadow: 3px 3px 0 var(--tt-pink), -3px -3px 0 var(--tt-cyan);
+  color: var(--yellow);
+  text-shadow: 2px 2px 0 var(--pink);
   line-height: 1;
-  animation: jitter 0.15s infinite;
 }
 
-@keyframes jitter {
-  0% { transform: translate(0, 0); }
-  25% { transform: translate(1px, -1px); }
-  50% { transform: translate(-1px, 0); }
-  75% { transform: translate(0, 1px); }
-  100% { transform: translate(-1px, -1px); }
-}
-
-/* ------- TAJIMANIA Meter ------- */
 .meter {
   display: flex;
   flex-direction: column;
@@ -116,8 +104,7 @@ button {
   font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.1em;
-  color: var(--text);
-  text-shadow: 2px 2px 0 var(--tt-pink), -2px -2px 0 var(--tt-cyan);
+  color: var(--text-dim);
 }
 .meter-bar {
   width: 200px;
@@ -125,13 +112,12 @@ button {
   background: var(--bg-1);
   position: relative;
   overflow: hidden;
-  border: 2px solid var(--text);
-  box-shadow: 4px 4px 0 var(--tt-pink), -4px -4px 0 var(--tt-cyan);
+  border: 2px solid var(--text-dim);
 }
 .meter-fill {
   height: 100%;
-  width: 0%;
-  background: var(--text);
+  width: 100%;
+  background: var(--cyan);
   transition: width 0.1s linear, background-color 0.2s;
 }
 .meter-value {
@@ -149,7 +135,7 @@ button {
   justify-content: center;
   align-items: center;
   z-index: 20;
-  background: var(--bg-0);
+  background: radial-gradient(circle at center, #140810 0%, #050205 100%);
   transition: opacity 0.5s ease-out;
 }
 .title-screen.booting {
@@ -168,24 +154,60 @@ button {
   margin: 0;
   position: relative;
   text-transform: uppercase;
-  text-shadow: 4px 4px 0 var(--tt-pink), -4px -4px 0 var(--tt-cyan);
-  animation: title-jitter 3s infinite linear alternate-reverse;
+  animation: title-glitch 5s infinite;
 }
 
-@keyframes title-jitter {
-  0%, 95% { transform: skew(0deg); }
-  96% { transform: skew(10deg); }
-  97% { transform: skew(-10deg); }
-  98% { transform: skew(5deg); }
-  100% { transform: skew(0deg); }
+.glitch-text::before, .glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  opacity: 0.8;
+}
+
+.glitch-text::before {
+  color: var(--cyan);
+  z-index: -1;
+  animation: glitch-anim-1 4s infinite;
+}
+
+.glitch-text::after {
+  color: var(--pink);
+  z-index: -2;
+  animation: glitch-anim-2 3s infinite reverse;
+}
+
+/* Irregular jitter for Astral Chain vibe */
+@keyframes title-glitch {
+  0%, 14% { transform: translate(0,0) skew(0deg); }
+  15% { transform: translate(-5px, 2px) skew(-10deg); }
+  16%, 40% { transform: translate(0,0) skew(0deg); }
+  41% { transform: translate(10px, -5px) skew(20deg); }
+  42%, 80% { transform: translate(0,0) skew(0deg); }
+  81% { transform: translate(-2px, -2px) skew(-5deg); }
+  82%, 100% { transform: translate(0,0) skew(0deg); }
+}
+
+@keyframes glitch-anim-1 {
+  0%, 14% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transform: translate(0); }
+  15% { clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%); transform: translate(-10px, 0); }
+  16%, 100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transform: translate(0); }
+}
+
+@keyframes glitch-anim-2 {
+  0%, 40% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transform: translate(0); }
+  41% { clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%); transform: translate(10px, 0); }
+  42%, 100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transform: translate(0); }
 }
 
 .subtitle {
   font-size: 18px;
   font-weight: 900;
   letter-spacing: 12px;
-  color: var(--text);
-  text-shadow: 2px 2px 0 var(--tt-pink), -2px -2px 0 var(--tt-cyan);
+  color: var(--yellow);
   margin-top: 10px;
   margin-bottom: 60px;
   display: inline-block;
@@ -197,34 +219,79 @@ button {
   font-size: 24px;
   letter-spacing: 4px;
   color: var(--bg-0);
-  background: var(--text);
+  background: var(--yellow);
   border: none;
-  box-shadow: 6px 6px 0 var(--tt-pink), -6px -6px 0 var(--tt-cyan);
-  transition: transform 0.1s;
+  box-shadow: 6px 6px 0 var(--pink);
+  transition: transform 0.1s, box-shadow 0.1s;
   cursor: pointer;
   text-transform: uppercase;
 }
 .btn-start:hover {
-  transform: scale(1.05);
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--pink);
 }
 .btn-start:active { 
-  transform: scale(0.95);
+  transform: translate(4px, 4px);
+  box-shadow: 2px 2px 0 var(--pink);
 }
 
-/* ------- flash overlay ------- */
-.flash-overlay {
+/* ------- Game Over Screen ------- */
+.gameover-screen {
   position: absolute;
   inset: 0;
-  pointer-events: none;
-  z-index: 15;
-  mix-blend-mode: screen;
-  background: #fff;
-  opacity: 0;
-  transition: opacity 0.1s;
-}
-.flash-overlay.show {
-  opacity: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 30;
+  background: rgba(5, 2, 5, 0.85);
+  backdrop-filter: blur(4px);
 }
 
-/* Utility to show/hide sections */
+.go-title {
+  font-size: 80px;
+  font-weight: 900;
+  color: var(--pink);
+  margin: 0 0 20px 0;
+  text-shadow: 4px 4px 0 #000;
+}
+
+.go-stats {
+  font-size: 24px;
+  color: var(--text);
+  margin-bottom: 40px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.go-stats span {
+  color: var(--yellow);
+  font-weight: 900;
+  font-size: 32px;
+}
+
+.go-actions {
+  display: flex;
+  gap: 20px;
+}
+
+.btn-share {
+  background: #000;
+  color: #fff;
+  border: 2px solid #333;
+  padding: 16px 40px;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-share:hover {
+  background: #111;
+  border-color: #555;
+}
+
 .hidden { display: none !important; }

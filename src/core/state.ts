@@ -47,6 +47,8 @@ export interface State {
   paused: boolean;
   began: boolean;
   
+  stateMachine: 'playing' | 'gameover';
+  
   tick: number;
   timeMs: number;
   lastFrameMs: number;
@@ -56,6 +58,7 @@ export interface State {
 
   score: number;
   combo: number;
+  maxCombo: number; // For sharing
   overdriveTimer: number;
 
   particles: Particle[];
@@ -78,6 +81,8 @@ export function makeState(settings: Settings, palette: Palette): State {
     paused: false,
     began: false,
     
+    stateMachine: 'playing',
+    
     tick: 0,
     timeMs: 0,
     lastFrameMs: 0,
@@ -95,6 +100,7 @@ export function makeState(settings: Settings, palette: Palette): State {
 
     score: 0,
     combo: 0,
+    maxCombo: 0,
     overdriveTimer: 0,
 
     particles: [],

@@ -1,22 +1,37 @@
 import type { State, Enemy } from '@/core/state';
 
 export function stepPhysics(state: State, stepMs: number) {
+  if (state.stateMachine === 'gameover') {
+     // Freeze physics when dead, but maybe let particles fly
+     for (const p of state.particles) {
+       p.x += p.vx * 0.1;
+       p.y += p.vy * 0.1;
+       p.life -= 0.01;
+     }
+     state.particles = state.particles.filter(p => p.life > 0);
+     return;
+  }
+
   const p = state.player;
   const dt = state.slowMo > 0 ? stepMs * 0.1 : stepMs;
   if (state.slowMo > 0) state.slowMo--;
 
   // Overdrive logic
   if (state.combo >= 50 && state.overdriveTimer <= 0) {
-    state.overdriveTimer = 625; // ~10 seconds at 60fps
+    state.overdriveTimer = 625; // ~10 seconds
     state.screenFlash = 1.0;
     state.shakeMag = 30;
     state.shakeMs = 500;
+    state.popups.push({
+      x: state.stage.w / 2, y: state.stage.h / 2,
+      vy: -2, life: 2.0, color: '#fcee0a', text: 'OVERDRIVE!!', size: 64
+    });
   }
   
   if (state.overdriveTimer > 0) {
     state.overdriveTimer -= (dt / 16);
     if (state.overdriveTimer <= 0) {
-      state.combo = 0; // Reset after overdrive finishes
+      state.combo = 0; 
     }
   }
 
@@ -25,13 +40,10 @@ export function stepPhysics(state: State, stepMs: number) {
     const dx = p.target.x - p.x;
     const dy = p.target.y - p.y;
     
-    // Slow down massively if charging
     const speedMultiplier = p.state === 'charging' ? 0.05 : 0.2;
-    
     p.vx = dx * speedMultiplier;
     p.vy = dy * speedMultiplier;
     
-    // Cap max speed
     const maxSpeed = p.state === 'charging' ? 1.5 : 8;
     const velMag = Math.hypot(p.vx, p.vy);
     if (velMag > maxSpeed) {
@@ -44,7 +56,6 @@ export function stepPhysics(state: State, stepMs: number) {
 
     if (p.state === 'charging') {
       p.charge = Math.min(1, p.charge + 0.02 * (dt / 16));
-      // Overdrive instant charge
       if (state.overdriveTimer > 0) p.charge = 1.0;
     }
   }
@@ -53,7 +64,6 @@ export function stepPhysics(state: State, stepMs: number) {
   if (p.state === 'attacking') {
     p.attackTimer -= (dt / 16);
     
-    // Dash slightly forward on attack frame 1
     if (p.attackTimer > 14) {
        const dx = p.target.x - p.x;
        const dy = p.target.y - p.y;
@@ -65,9 +75,9 @@ export function stepPhysics(state: State, stepMs: number) {
        }
     }
 
-    // Hitbox logic (Active on frame 12-15)
     if (p.attackTimer > 11 && p.attackTimer <= 15) {
       const attackRadius = 40 + p.charge * 60;
+      let killedThisFrame = 0;
       
       for (const e of state.enemies) {
         if (e.dead) continue;
@@ -78,14 +88,14 @@ export function stepPhysics(state: State, stepMs: number) {
           if (e.hp <= 0) {
             e.dead = true;
             state.combo++;
+            state.maxCombo = Math.max(state.maxCombo, state.combo);
             state.score += 100 * state.combo;
+            killedThisFrame++;
           } else {
-            // Knockback
             e.vx = ((e.x - p.x) / dist) * 10;
             e.vy = ((e.y - p.y) / dist) * 10;
           }
 
-          // Hit stop & effects
           state.slowMo = 5 + Math.floor(p.charge * 10); 
           state.shakeMag = Math.max(state.shakeMag, 10 + p.charge * 20);
           state.shakeMs = 150;
@@ -95,11 +105,24 @@ export function stepPhysics(state: State, stepMs: number) {
              state.particles.push({
                x: e.x, y: e.y,
                vx: (Math.random()-0.5)*20, vy: (Math.random()-0.5)*20,
-               life: 1.5, color: p.charge > 0.8 ? '#ff0055' : '#fcee0a', 
+               life: 1.5, color: p.charge > 0.8 ? '#ff0055' : '#00f0ff', 
                size: p.charge > 0.8 ? 8 : 4, kind: 'star', shimmer: true
              });
           }
         }
+      }
+
+      if (killedThisFrame > 2) {
+        state.popups.push({
+          x: p.x, y: p.y - 40,
+          vy: -1, life: 1.5, color: '#ff9a30', text: 'MULTIKILL!', size: 24
+        });
+      }
+      if (state.combo === 10 || state.combo === 30 || state.combo === 50) {
+         state.popups.push({
+          x: p.x, y: p.y - 70,
+          vy: -2, life: 2.0, color: '#fcee0a', text: `${state.combo} COMBO!`, size: 36
+        });
       }
     }
 
@@ -118,81 +141,87 @@ export function stepPhysics(state: State, stepMs: number) {
     const distToPlayer = Math.hypot(dx, dy);
 
     if (e.state === 'chasing') {
-      const speed = e.type === 'gear' ? 1.0 : 3.0; // Skulls fast, gears slow
+      const speed = e.type === 'gear' ? 1.0 : 3.0; 
       if (distToPlayer > 0) {
         e.vx += ((dx / distToPlayer) * speed - e.vx) * 0.1;
         e.vy += ((dy / distToPlayer) * speed - e.vy) * 0.1;
       }
       
-      // Skulls (Rushers): start telegraph close. Gears (Snipers): start far.
       const triggerDist = e.type === 'gear' ? 300 : 120;
-      
       if (distToPlayer < triggerDist) {
         e.state = 'telegraph';
-        e.stateTimer = e.type === 'gear' ? 60 : 25; // Gears aim longer
+        e.stateTimer = e.type === 'gear' ? 60 : 25; 
         e.vx = 0; e.vy = 0;
         e.justDodged = false;
       }
     } 
     else if (e.state === 'telegraph') {
       e.stateTimer -= (dt / 16);
-      
-      // Gears loosely track player during windup
-      if (e.type === 'gear' && distToPlayer > 0) {
-         e.lungeVx = (dx / distToPlayer);
-         e.lungeVy = (dy / distToPlayer);
-      } else if (distToPlayer > 0) {
+      if (distToPlayer > 0) {
          e.lungeVx = (dx / distToPlayer);
          e.lungeVy = (dy / distToPlayer);
       }
-
       if (e.stateTimer <= 0) {
         e.state = 'lunging';
-        e.stateTimer = e.type === 'gear' ? 30 : 15; // Gears lunge further
+        e.stateTimer = e.type === 'gear' ? 30 : 15; 
       }
     }
     else if (e.state === 'lunging') {
       e.stateTimer -= (dt / 16);
-      
       const lungeSpeed = e.type === 'gear' ? 18 : 12;
       e.vx = e.lungeVx * lungeSpeed;
       e.vy = e.lungeVy * lungeSpeed;
 
       // Hurt player if hit
       if (distToPlayer < e.r + 10 && p.state !== 'attacking') {
-        p.hp -= 10;
+        p.hp -= 20; // Increased damage for danger
         state.combo = 0;
-        state.shakeMag = 20;
-        state.shakeMs = 100;
+        state.shakeMag = 40;
+        state.shakeMs = 300;
+        state.screenFlash = 0.8;
         e.state = 'recovering';
         e.stateTimer = 60;
+
+        // GAME OVER CHECK
+        if (p.hp <= 0) {
+           state.stateMachine = 'gameover';
+           state.slowMo = 0; // Freeze
+           // Explode player
+           for(let i=0; i<30; i++) {
+             state.particles.push({
+               x: p.x, y: p.y,
+               vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30,
+               life: 3.0, color: '#ff0055', size: 10, kind: 'star', shimmer: false
+             });
+           }
+        }
       } 
       // JUST DODGE logic
       else if (distToPlayer < e.r + 40 && p.state !== 'attacking' && !e.justDodged) {
-        // Player is very close, but didn't get hit!
         e.justDodged = true;
         p.charge = 1.0;
         state.slowMo = 10;
         state.screenFlash = 0.5;
-        
-        // Spawn cyan dodge particles
+        state.popups.push({
+          x: p.x, y: p.y - 30,
+          vy: -1, life: 1.0, color: '#00f0ff', text: 'JUST DODGE!', size: 20
+        });
         for(let i=0; i<8; i++) {
            state.particles.push({
              x: p.x, y: p.y,
              vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
-             life: 1.0, color: '#00f0ff', 
-             size: 6, kind: 'star', shimmer: false
+             life: 1.0, color: '#00f0ff', size: 6, kind: 'star', shimmer: false
            });
         }
       }
 
       if (e.stateTimer <= 0) {
         e.state = 'recovering';
-        e.stateTimer = e.type === 'gear' ? 80 : 40; // Gears have huge recovery
+        e.stateTimer = e.type === 'gear' ? 80 : 40; 
       }
     }
     else if (e.state === 'recovering') {
-      e.vx *= 0.85; // Friction
+      e.vx *= 0.85; 
       e.vy *= 0.85;
       e.stateTimer -= (dt / 16);
       if (e.stateTimer <= 0) {

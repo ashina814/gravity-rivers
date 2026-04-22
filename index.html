@@ -27,14 +27,30 @@
     <main id="stage">
       <canvas id="scene" aria-label="Gravity Rivers canvas"></canvas>
 
-      <!-- Title Screen Overlay -->
-      <div id="title-screen" class="title-screen">
+      <!-- Title Screen -->
+      <section id="title-screen" class="title-screen booting">
         <div class="title-content">
           <h1 class="glitch-text" data-text="TAJIMANIA">TAJIMANIA</h1>
-          <p class="subtitle">STEAMPUNK CHAIN-REACTION BRAWLER</p>
-          <button id="btn-start" class="btn-start">CLICK TO START ENGINE</button>
+          <div class="subtitle">STEAMPUNK BRAWLER</div><br>
+          <button id="btn-start" class="btn-start">SYSTEM START</button>
         </div>
-      </div>
+      </section>
+
+      <!-- Game Over Screen -->
+      <section id="gameover-screen" class="gameover-screen hidden">
+        <h2 class="go-title">SYSTEM DOWN</h2>
+        <div class="go-stats">
+          SCORE: <span id="go-score">0</span><br>
+          MAX COMBO: <span id="go-combo">0</span>
+        </div>
+        <div class="go-actions">
+          <button id="btn-restart" class="btn-start">REBOOT</button>
+          <button id="btn-share" class="btn-share">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            SHARE
+          </button>
+        </div>
+      </section>
       
       <!-- Game HUD (hidden on boot) -->
       <div id="hud" class="hud" style="display: none;">
