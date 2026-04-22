@@ -21,8 +21,10 @@ export function tickSpawner(state: State, dtMs: number): void {
 
     const typeRnd = Math.random();
     let type: 'gear' | 'skull' | 'boss' = 'gear';
-    if (typeRnd < 0.1 && state.score > 500) type = 'boss';
-    else if (typeRnd < 0.4) type = 'skull';
+    
+    // Escalation based on combo
+    if (state.combo > 20 && typeRnd < 0.15) type = 'boss';
+    else if (state.combo > 5 && typeRnd < 0.35) type = 'skull';
 
     state.enemies.push({
       id: NEXT_ID++,
@@ -35,8 +37,8 @@ export function tickSpawner(state: State, dtMs: number): void {
       hp: type === 'boss' ? 500 : 100,
       r: type === 'boss' ? 30 : (type === 'skull' ? 18 : 14),
       dead: false,
-      state: 'chasing',
-      stateTimer: 0,
+      state: type === 'skull' ? 'recovering' : 'chasing', // Skull doesn't chase, just aims
+      stateTimer: 60,
       justDodged: false,
       type
     });

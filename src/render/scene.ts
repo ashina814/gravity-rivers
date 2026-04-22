@@ -109,9 +109,12 @@ export function renderScene(ctx: CanvasRenderingContext2D, state: State): void {
     drawPlayer(ctx, state);
   }
   drawEnemies(ctx, state);
+  drawProjectiles(ctx, state);
   drawFx(ctx, state);
   
-  ctx.restore();
+  ctx.restore(); // Restore camera transform
+
+  drawLives(ctx, state);
 
   // Screen Flash
   if (state.screenFlash > 0) {
@@ -200,6 +203,8 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number) {
 
 function drawPlayer(ctx: CanvasRenderingContext2D, state: State) {
   const p = state.player;
+  if (p.invulnTimer > 0 && Math.floor(state.timeMs / 100) % 2 === 0) return; // Invuln flash
+
   ctx.save();
   
   // Colorful neon colors instead of glitch
@@ -301,7 +306,15 @@ function drawEnemies(ctx: CanvasRenderingContext2D, state: State) {
       ctx.fill();
     }
     
-    if (e.hp < 100) {
+    if (e.type === 'boss') {
+       ctx.beginPath();
+       ctx.arc(0, 0, r + 8, 0, Math.PI*2);
+       ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
+       ctx.lineWidth = 4;
+       ctx.shadowColor = '#00f0ff';
+       ctx.shadowBlur = 15;
+       ctx.stroke();
+    } else if (e.hp < 100) {
        ctx.fillStyle = '#333';
        ctx.fillRect(-15, -r - 15, 30, 4);
        ctx.fillStyle = color;
@@ -310,4 +323,48 @@ function drawEnemies(ctx: CanvasRenderingContext2D, state: State) {
     
     ctx.restore();
   }
+}
+
+function drawProjectiles(ctx: CanvasRenderingContext2D, state: State) {
+  for (const proj of state.projectiles) {
+    if (proj.dead) continue;
+    ctx.save();
+    ctx.translate(proj.x, proj.y);
+    
+    ctx.beginPath();
+    ctx.arc(0, 0, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff0055';
+    ctx.shadowColor = '#ff0055';
+    ctx.shadowBlur = 10;
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    
+    ctx.restore();
+  }
+}
+
+function drawLives(ctx: CanvasRenderingContext2D, state: State) {
+  if (state.stateMachine === 'gameover') return;
+  const lives = state.player.lives;
+  ctx.save();
+  ctx.translate(30, 30);
+  
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.arc(i * 30, 0, 8, 0, Math.PI * 2);
+    if (i < lives) {
+      ctx.fillStyle = '#ff0055';
+      ctx.shadowColor = '#ff0055';
+      ctx.shadowBlur = 10;
+    } else {
+      ctx.fillStyle = '#333';
+      ctx.shadowBlur = 0;
+    }
+    ctx.fill();
+  }
+  ctx.restore();
 }

@@ -47,6 +47,13 @@ export interface SlashLine {
   color: string;
 }
 
+export interface Projectile {
+  id: number;
+  x: number; y: number;
+  vx: number; vy: number;
+  dead: boolean;
+}
+
 export interface State {
   stage: Stage;
   settings: Settings;
@@ -61,8 +68,9 @@ export interface State {
   timeMs: number;
   lastFrameMs: number;
 
-  player: Player & { chainReady?: boolean, dashStartX?: number, dashStartY?: number };
+  player: Player & { chainReady?: boolean, dashStartX?: number, dashStartY?: number, lives: number, invulnTimer: number };
   enemies: Enemy[];
+  projectiles: Projectile[];
 
   score: number;
   combo: number;
@@ -110,9 +118,12 @@ export function makeState(settings: Settings, palette: Palette): State {
       attackTimer: 0,
       target: { x: 0, y: 0 },
       hp: 100,
+      lives: 3,
+      invulnTimer: 0,
       chainReady: false,
     },
     enemies: [],
+    projectiles: [],
 
     score: 0,
     combo: 0,
