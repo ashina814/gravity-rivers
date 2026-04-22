@@ -1,10 +1,5 @@
 import type { State } from '@/core/state';
-import { bloomName } from '@/sim/flow';
 
-/**
- * Glue the HUD DOM to the game state. Called every frame.
- * Updates are idempotent and cached to avoid layout thrash.
- */
 export interface HudElements {
   inkFill: HTMLElement;
   inkValue: HTMLElement;
@@ -36,39 +31,37 @@ export interface HudRuntime {
   setHint(text: string): void;
 }
 
-import { LEVELS } from '@/core/levels';
-
 export function bindHud(els: HudElements): HudRuntime {
   let lastInkFill = -1;
   let lastInkValue = '';
-  let lastLevel = -1;
+  let lastCombo = -1;
   let lastScore = -1;
   let bannerTimer = 0;
   let hintLast = '';
 
   function update(state: State) {
-    const levelDef = LEVELS[state.currentLevelIdx] || LEVELS[0];
+    const p = state.player;
     
-    // Ink meter
-    const inkPct = Math.max(0, 100 - (state.inkUsed / levelDef.maxInk) * 100);
-    if (Math.abs(inkPct - lastInkFill) > 0.4) {
-      els.inkFill.style.width = inkPct.toFixed(1) + '%';
-      lastInkFill = inkPct;
+    // Energy meter for OVERDRIVE (Fever)
+    const energyPct = Math.min(100, p.energy);
+    if (Math.abs(energyPct - lastInkFill) > 0.4) {
+      els.inkFill.style.width = energyPct.toFixed(1) + '%';
+      lastInkFill = energyPct;
     }
     
-    const nStr = Math.floor(inkPct) + '%';
+    const nStr = Math.floor(energyPct) + '%';
     if (nStr !== lastInkValue) {
       els.inkValue.textContent = nStr;
       lastInkValue = nStr;
     }
     
-    if (state.currentLevelIdx + 1 !== lastLevel) {
-      els.levelCount.textContent = String(state.currentLevelIdx + 1);
-      lastLevel = state.currentLevelIdx + 1;
+    if (p.combo !== lastCombo) {
+      els.levelCount.textContent = String(p.combo);
+      lastCombo = p.combo;
     }
     
     if (state.score !== lastScore) {
-      els.scoreCount.textContent = `${state.score} / ${levelDef.goal.required}`;
+      els.scoreCount.textContent = String(state.score);
       lastScore = state.score;
     }
 
@@ -98,8 +91,4 @@ export function bindHud(els: HudElements): HudRuntime {
   }
 
   return { update, showBanner, setHint };
-}
-
-export function formatBloomBanner(chain: number): string {
-  return `${bloomName(chain)} ×${chain}`;
 }

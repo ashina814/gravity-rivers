@@ -39,14 +39,14 @@
       <!-- Game HUD (hidden on boot) -->
       <div id="hud" class="hud" style="display: none;">
         <div class="hud-left">
-          <div class="meter" id="ink-meter" aria-label="Ink meter">
-            <div class="meter-label">INK</div>
+          <div class="meter" id="ink-meter" aria-label="Energy meter">
+            <div class="meter-label">OVERDRIVE</div>
             <div class="meter-bar"><div class="meter-fill" id="ink-fill"></div></div>
-            <div class="meter-value" id="ink-value">100%</div>
+            <div class="meter-value" id="ink-value">0%</div>
           </div>
           <div class="stat">
-            <div class="stat-label">LEVEL</div>
-            <div class="stat-val" id="level-count">1</div>
+            <div class="stat-label">COMBO</div>
+            <div class="stat-val" id="level-count">0</div>
           </div>
           <div class="stat">
             <div class="stat-label">SCORE</div>
@@ -60,49 +60,7 @@
         </div>
       </div>
 
-      <!-- tool dock -->
-      <aside class="dock" id="dock">
-        <button class="tool active" data-tool="draw" title="Draw [D]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M3 21 L9 19 L21 7 L17 3 L5 15 L3 21 Z M14 6 L18 10" stroke="currentColor" fill="none"/>
-          </svg>
-          <span>DRAW</span>
-        </button>
-        <button class="tool" data-tool="erase" title="Erase [E]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M3 17 L13 7 L19 13 L9 23 Z M7 21 L15 21" stroke="currentColor" fill="none"/>
-          </svg>
-          <span>ERASE</span>
-        </button>
-        <div class="dock-sep"></div>
-        <button class="tool" id="btn-clear" title="Clear lines [C]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M5 6 L19 6 M8 6 L9 20 L15 20 L16 6 M10 2 L14 2" stroke="currentColor" fill="none"/>
-          </svg>
-          <span>CLEAR</span>
-        </button>
-        <button class="tool" id="btn-snap" title="Snapshot [S]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M4 7 L8 7 L10 5 L14 5 L16 7 L20 7 L20 19 L4 19 Z" stroke="currentColor" fill="none"/>
-            <circle cx="12" cy="13" r="4" stroke="currentColor" fill="none"/>
-          </svg>
-          <span>SNAP</span>
-        </button>
-        <button class="tool" id="btn-pause" title="Pause [Space]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M8 5 L8 19 M16 5 L16 19" stroke="currentColor" fill="none"/>
-          </svg>
-          <span>PAUSE</span>
-        </button>
-        <div class="dock-sep"></div>
-        <button class="tool" id="btn-settings" title="Settings [,]">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" stroke="currentColor" fill="none"/>
-            <path d="M12 2 L12 5 M12 19 L12 22 M2 12 L5 12 M19 12 L22 12 M4.9 4.9 L7 7 M17 17 L19.1 19.1 M4.9 19.1 L7 17 M17 7 L19.1 4.9" stroke="currentColor" fill="none"/>
-          </svg>
-          <span>CFG</span>
-        </button>
-      </aside>
+      <!-- dock removed for Issen mode -->
 
       <!-- settings panel -->
       <section class="panel hidden" id="panel-settings" role="dialog" aria-hidden="true">

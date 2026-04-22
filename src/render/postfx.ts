@@ -16,17 +16,7 @@ export function drawPostFx(ctx: CanvasRenderingContext2D, state: State): void {
     ctx.restore();
   }
 
-  if (state.settings.bloom && state.bloom.pulse > 0) {
-    // additive warm wash
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    const pulse = state.bloom.pulse;
-    ctx.fillStyle = `rgba(255, 240, 100, ${pulse * 0.12})`;
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = `rgba(120, 0, 255, ${pulse * 0.08})`;
-    ctx.fillRect(0, 0, w, h);
-    ctx.restore();
-  }
+
 
   // Vignette darken (blend: multiply)
   ctx.save();

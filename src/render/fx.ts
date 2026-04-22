@@ -136,7 +136,4 @@ export function updateFx(state: State, dtMs: number): void {
       state.shakeMag = 0;
     }
   }
-  if (state.bloom.pulse > 0) {
-    state.bloom.pulse = Math.max(0, state.bloom.pulse - 0.018 * dt);
-  }
 }
