@@ -5,7 +5,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, state: State): void {
   const { w, h } = state.stage;
   
   // Dark industrial background
-  ctx.fillStyle = '#0a0508';
+  ctx.fillStyle = '#060606';
   ctx.fillRect(0, 0, w, h);
   
   // DMC Typography Background Text
@@ -15,7 +15,7 @@ export function renderScene(ctx: CanvasRenderingContext2D, state: State): void {
     ctx.save();
     ctx.translate(w / 2, h / 2);
     ctx.scale(1 + progress * 0.3, 1 + progress * 0.3);
-    ctx.fillStyle = `rgba(255, 0, 85, ${0.15 * (1 - progress)})`;
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.06 * (1 - progress)})`;
     ctx.font = 'italic 900 160px var(--font, monospace)';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -96,12 +96,10 @@ export function renderScene(ctx: CanvasRenderingContext2D, state: State): void {
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(dashDist, 0);
-      ctx.strokeStyle = `rgba(255, 0, 85, ${0.3 + p.charge * 0.7})`;
-      ctx.lineWidth = 2 + p.charge * 4;
-      ctx.setLineDash([10, 10]);
+      ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 + p.charge * 0.35})`;
+      ctx.lineWidth = 1 + p.charge * 2;
+      ctx.setLineDash([8, 12]);
       ctx.lineDashOffset = -(state.tick % 100) * 0.5;
-      ctx.shadowColor = '#ff0055';
-      ctx.shadowBlur = 10;
       ctx.stroke();
       ctx.restore();
     }
@@ -142,59 +140,51 @@ export function renderScene(ctx: CanvasRenderingContext2D, state: State): void {
 
 function getStyleRank(combo: number) {
   if (combo < 5) return null;
-  if (combo < 10) return { rank: 'C', word: 'CRAZY!', color: '#00f0ff' };
-  if (combo < 20) return { rank: 'B', word: 'BADASS!!', color: '#ff9a30' };
-  if (combo < 35) return { rank: 'A', word: 'APOCALYPTIC!!', color: '#ff0055' };
-  if (combo < 50) return { rank: 'S', word: 'SAVAGE!!!', color: '#fcee0a' };
-  if (combo < 70) return { rank: 'SS', word: 'SICK SKILLS!!!', color: '#fcee0a' };
-  return { rank: 'SSS', word: 'SMOKIN SEXY STYLE!!!', color: '#fcee0a' };
+  if (combo < 10) return { rank: 'C', word: 'CRAZY', color: 'rgba(255,255,255,0.6)' };
+  if (combo < 20) return { rank: 'B', word: 'BADASS', color: 'rgba(255,255,255,0.7)' };
+  if (combo < 35) return { rank: 'A', word: 'APOCALYPTIC', color: 'rgba(255,255,255,0.8)' };
+  if (combo < 50) return { rank: 'S', word: 'SAVAGE', color: '#ffffff' };
+  if (combo < 70) return { rank: 'SS', word: 'SICK SKILLS', color: '#ffffff' };
+  return { rank: 'SSS', word: 'SMOKIN SEXY STYLE', color: '#ffffff' };
 }
 
 function drawStyleRank(ctx: CanvasRenderingContext2D, state: State) {
   const rankObj = getStyleRank(state.combo);
   if (!rankObj) return;
 
-  const { w, h } = state.stage;
+  const { w } = state.stage;
   ctx.save();
-  ctx.translate(w - 150, 150); // Top right corner
+  ctx.translate(w - 120, 140);
   
-  // Pulse animation on threshold cross
   const pulse = state.rankPulse > 0 ? state.rankPulse : 0;
-  const scale = 1 + pulse * 0.5;
+  const scale = 1 + pulse * 0.3;
   ctx.scale(scale, scale);
-  ctx.rotate(-0.1); // Slightly tilted
   
-  // Draw Rank Letter
-  ctx.font = 'italic 900 120px var(--font, monospace)';
+  // Rank letter — big, white, clean
+  ctx.font = '900 100px var(--font, monospace)';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  
-  // shadow/glow
-  ctx.shadowColor = rankObj.color;
-  ctx.shadowBlur = 20 + pulse * 20;
-  
   ctx.fillStyle = rankObj.color;
+  ctx.globalAlpha = 0.9;
   ctx.fillText(rankObj.rank, 0, 0);
   
-  // Draw inner white
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowBlur = 0;
-  ctx.fillText(rankObj.rank, 0, 0);
-  
-  // Draw Rank Word
-  ctx.font = 'italic 900 24px var(--font, monospace)';
-  ctx.fillStyle = rankObj.color;
-  ctx.fillText(rankObj.word, 0, 70);
+  // Rank word — small, understated
+  ctx.font = '900 14px var(--font, monospace)';
+  ctx.globalAlpha = 0.5;
+  ctx.letterSpacing = '4px';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(rankObj.word, 0, 60);
+  ctx.globalAlpha = 1.0;
   
   ctx.restore();
 }
 
 function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.save();
-  ctx.strokeStyle = '#140810';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  const gridR = 60;
+  const gridR = 80;
   for(let x=0; x<w; x+=gridR) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
   for(let y=0; y<h; y+=gridR) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
   ctx.stroke();
@@ -203,50 +193,54 @@ function drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number) {
 
 function drawPlayer(ctx: CanvasRenderingContext2D, state: State) {
   const p = state.player;
-  if (p.invulnTimer > 0 && Math.floor(state.timeMs / 100) % 2 === 0) return; // Invuln flash
+  if (p.invulnTimer > 0 && Math.floor(state.timeMs / 80) % 2 === 0) return;
 
   ctx.save();
   
-  // Colorful neon colors instead of glitch
   const isMaxCharge = p.charge > 0.9;
-  const primaryColor = isMaxCharge ? '#ff0055' : '#00f0ff';
+  const primaryColor = '#ffffff';
+  const accentColor = isMaxCharge ? '#ff0055' : 'rgba(255,255,255,0.5)';
   
-  if (state.overdriveTimer > 0) {
-    ctx.shadowColor = '#fcee0a';
-    ctx.shadowBlur = 20;
-  }
-
-  // Charge Indicator Radius
+  // Charge ring
   if (p.state === 'charging') {
     const attackRadius = 40 + p.charge * 60;
-    ctx.strokeStyle = primaryColor;
-    ctx.setLineDash(isMaxCharge ? [] : [5, 5]);
-    ctx.lineWidth = isMaxCharge ? 4 : 2;
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = isMaxCharge ? 2 : 1;
+    ctx.globalAlpha = 0.4 + p.charge * 0.6;
     ctx.beginPath();
     ctx.arc(p.x, p.y, attackRadius, 0, Math.PI*2);
     ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.globalAlpha = 1.0;
   }
 
-  // Attack Hitbox Flash
+  // Attack flash
   if (p.state === 'attacking') {
     const attackRadius = 40 + p.charge * 60;
-    ctx.fillStyle = primaryColor;
-    ctx.globalAlpha = (p.attackTimer / 15) * 0.5;
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = (p.attackTimer / 15) * 0.15;
     ctx.beginPath();
     ctx.arc(p.x, p.y, attackRadius, 0, Math.PI*2);
     ctx.fill();
     ctx.globalAlpha = 1.0;
   }
 
-  // Core Solid Shape
+  // Player triangle
   ctx.fillStyle = primaryColor;
   ctx.beginPath();
-  ctx.moveTo(p.x, p.y - 12);
-  ctx.lineTo(p.x + 10, p.y + 10);
-  ctx.lineTo(p.x - 10, p.y + 10);
+  ctx.moveTo(p.x, p.y - 14);
+  ctx.lineTo(p.x + 11, p.y + 11);
+  ctx.lineTo(p.x - 11, p.y + 11);
   ctx.closePath();
   ctx.fill();
+
+  // Overdrive glow
+  if (state.overdriveTimer > 0) {
+    ctx.strokeStyle = '#fcee0a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 18, 0, Math.PI*2);
+    ctx.stroke();
+  }
 
   ctx.restore();
 }
@@ -257,68 +251,62 @@ function drawEnemies(ctx: CanvasRenderingContext2D, state: State) {
     ctx.save();
     ctx.translate(e.x, e.y);
     
-    // Colorful enemy states
-    let color = e.type === 'gear' ? '#ff9a30' : '#b24bff'; // Orange for gear, purple for skull
-    if (e.state === 'telegraph') color = '#ff0055'; // Red warning
-    if (e.state === 'recovering') color = '#00f0ff'; // Cyan vulnerable
+    // Clean color coding by type
+    let color = '#888'; // gear: neutral grey
+    if (e.type === 'skull') color = '#cc4444'; // sniper: muted red
+    if (e.type === 'boss') color = '#ffffff'; // elite: white
     
-    ctx.fillStyle = '#0a0508';
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-
-    // Telegraph indicator
-    if (e.state === 'telegraph') {
-      ctx.globalAlpha = 0.5;
-      ctx.beginPath();
-      ctx.arc(0, 0, r + (e.stateTimer / 45) * 20, 0, Math.PI*2);
-      ctx.stroke();
-      ctx.globalAlpha = 1.0;
-    }
+    ctx.lineWidth = 2;
 
     if (e.type === 'gear') {
-      ctx.rotate(state.tick * 0.05);
+      ctx.rotate(state.tick * 0.03);
       ctx.beginPath();
-      const spikes = 8;
+      const spikes = 6;
       for (let i = 0; i < spikes * 2; i++) {
         const angle = (i * Math.PI) / spikes;
-        const radius = i % 2 === 0 ? r : r * 0.6;
+        const radius = i % 2 === 0 ? r : r * 0.65;
         if (i === 0) ctx.moveTo(Math.cos(angle)*radius, Math.sin(angle)*radius);
         else ctx.lineTo(Math.cos(angle)*radius, Math.sin(angle)*radius);
       }
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
-    } else {
+    } else if (e.type === 'skull') {
+      // Sniper: diamond
       ctx.beginPath();
       ctx.moveTo(0, -r);
-      ctx.lineTo(r, -r*0.5);
-      ctx.lineTo(r*0.8, r);
-      ctx.lineTo(-r*0.8, r);
-      ctx.lineTo(-r, -r*0.5);
+      ctx.lineTo(r, 0);
+      ctx.lineTo(0, r);
+      ctx.lineTo(-r, 0);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
-
+      // Crosshair dot
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(-r*0.3, -r*0.1, r*0.2, 0, Math.PI*2);
-      ctx.arc(r*0.3, -r*0.1, r*0.2, 0, Math.PI*2);
+      ctx.arc(0, 0, 3, 0, Math.PI*2);
       ctx.fill();
-    }
-    
-    if (e.type === 'boss') {
-       ctx.beginPath();
-       ctx.arc(0, 0, r + 8, 0, Math.PI*2);
-       ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
-       ctx.lineWidth = 4;
-       ctx.shadowColor = '#00f0ff';
-       ctx.shadowBlur = 15;
-       ctx.stroke();
-    } else if (e.hp < 100) {
-       ctx.fillStyle = '#333';
-       ctx.fillRect(-15, -r - 15, 30, 4);
-       ctx.fillStyle = color;
-       ctx.fillRect(-15, -r - 15, 30 * Math.max(0, e.hp / 100), 4);
+    } else {
+      // Boss: hexagon with shield ring
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI * 2) / 6 - Math.PI / 6;
+        const px = Math.cos(angle) * r;
+        const py = Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Shield ring
+      ctx.beginPath();
+      ctx.arc(0, 0, r + 6, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
     
     ctx.restore();
@@ -332,14 +320,12 @@ function drawProjectiles(ctx: CanvasRenderingContext2D, state: State) {
     ctx.translate(proj.x, proj.y);
     
     ctx.beginPath();
-    ctx.arc(0, 0, 6, 0, Math.PI * 2);
+    ctx.arc(0, 0, 5, 0, Math.PI * 2);
     ctx.fillStyle = '#ff0055';
-    ctx.shadowColor = '#ff0055';
-    ctx.shadowBlur = 10;
     ctx.fill();
     
     ctx.beginPath();
-    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.arc(0, 0, 2, 0, Math.PI * 2);
     ctx.fillStyle = '#ffffff';
     ctx.fill();
     
@@ -355,15 +341,13 @@ function drawLives(ctx: CanvasRenderingContext2D, state: State) {
   
   for (let i = 0; i < 3; i++) {
     ctx.beginPath();
-    ctx.arc(i * 30, 0, 8, 0, Math.PI * 2);
-    if (i < lives) {
-      ctx.fillStyle = '#ff0055';
-      ctx.shadowColor = '#ff0055';
-      ctx.shadowBlur = 10;
-    } else {
-      ctx.fillStyle = '#333';
-      ctx.shadowBlur = 0;
-    }
+    // Small triangles for lives
+    const ox = i * 28;
+    ctx.moveTo(ox, -7);
+    ctx.lineTo(ox + 7, 7);
+    ctx.lineTo(ox - 7, 7);
+    ctx.closePath();
+    ctx.fillStyle = i < lives ? '#ffffff' : 'rgba(255,255,255,0.15)';
     ctx.fill();
   }
   ctx.restore();
