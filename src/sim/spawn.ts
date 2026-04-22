@@ -25,11 +25,14 @@ export function tickSpawner(state: State, dtMs: number): void {
       y: ey,
       vx: 0,
       vy: 0,
+      lungeVx: 0,
+      lungeVy: 0,
       hp: 100,
-      r: Math.random() < 0.2 ? 18 : 14,
+      r: Math.random() < 0.3 ? 18 : 14,
       dead: false,
       state: 'chasing',
       stateTimer: 0,
+      justDodged: false,
       type: Math.random() < 0.3 ? 'skull' : 'gear'
     });
   }

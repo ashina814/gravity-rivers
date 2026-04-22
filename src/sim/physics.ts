@@ -5,11 +5,25 @@ export function stepPhysics(state: State, stepMs: number) {
   const dt = state.slowMo > 0 ? stepMs * 0.1 : stepMs;
   if (state.slowMo > 0) state.slowMo--;
 
+  // Overdrive logic
+  if (state.combo >= 50 && state.overdriveTimer <= 0) {
+    state.overdriveTimer = 625; // ~10 seconds at 60fps
+    state.screenFlash = 1.0;
+    state.shakeMag = 30;
+    state.shakeMs = 500;
+  }
+  
+  if (state.overdriveTimer > 0) {
+    state.overdriveTimer -= (dt / 16);
+    if (state.overdriveTimer <= 0) {
+      state.combo = 0; // Reset after overdrive finishes
+    }
+  }
+
   // Player Movement (Damping towards target)
   if (p.state === 'moving' || p.state === 'charging') {
     const dx = p.target.x - p.x;
     const dy = p.target.y - p.y;
-    const dist = Math.hypot(dx, dy);
     
     // Slow down massively if charging
     const speedMultiplier = p.state === 'charging' ? 0.05 : 0.2;
@@ -30,6 +44,8 @@ export function stepPhysics(state: State, stepMs: number) {
 
     if (p.state === 'charging') {
       p.charge = Math.min(1, p.charge + 0.02 * (dt / 16));
+      // Overdrive instant charge
+      if (state.overdriveTimer > 0) p.charge = 1.0;
     }
   }
 
@@ -73,7 +89,7 @@ export function stepPhysics(state: State, stepMs: number) {
           state.slowMo = 5 + Math.floor(p.charge * 10); 
           state.shakeMag = Math.max(state.shakeMag, 10 + p.charge * 20);
           state.shakeMs = 150;
-          state.screenFlash = p.charge > 0.8 ? 0.6 : 0.2;
+          state.screenFlash = Math.max(state.screenFlash, p.charge > 0.8 ? 0.6 : 0.2);
           
           for(let i=0; i<10 + p.charge*10; i++) {
              state.particles.push({
@@ -102,35 +118,46 @@ export function stepPhysics(state: State, stepMs: number) {
     const distToPlayer = Math.hypot(dx, dy);
 
     if (e.state === 'chasing') {
-      const speed = e.type === 'gear' ? 1.5 : 2.5;
+      const speed = e.type === 'gear' ? 1.0 : 3.0; // Skulls fast, gears slow
       if (distToPlayer > 0) {
         e.vx += ((dx / distToPlayer) * speed - e.vx) * 0.1;
         e.vy += ((dy / distToPlayer) * speed - e.vy) * 0.1;
       }
       
-      // If close enough, start telegraphing
-      if (distToPlayer < 100) {
+      // Skulls (Rushers): start telegraph close. Gears (Snipers): start far.
+      const triggerDist = e.type === 'gear' ? 300 : 120;
+      
+      if (distToPlayer < triggerDist) {
         e.state = 'telegraph';
-        e.stateTimer = 45; // 45 frames windup
+        e.stateTimer = e.type === 'gear' ? 60 : 25; // Gears aim longer
         e.vx = 0; e.vy = 0;
+        e.justDodged = false;
       }
     } 
     else if (e.state === 'telegraph') {
       e.stateTimer -= (dt / 16);
+      
+      // Gears loosely track player during windup
+      if (e.type === 'gear' && distToPlayer > 0) {
+         e.lungeVx = (dx / distToPlayer);
+         e.lungeVy = (dy / distToPlayer);
+      } else if (distToPlayer > 0) {
+         e.lungeVx = (dx / distToPlayer);
+         e.lungeVy = (dy / distToPlayer);
+      }
+
       if (e.stateTimer <= 0) {
         e.state = 'lunging';
-        e.stateTimer = 15; // 15 frames lunge
-        // Lunge fast towards where player IS
-        if (distToPlayer > 0) {
-          const lungeSpeed = 12;
-          e.vx = (dx / distToPlayer) * lungeSpeed;
-          e.vy = (dy / distToPlayer) * lungeSpeed;
-        }
+        e.stateTimer = e.type === 'gear' ? 30 : 15; // Gears lunge further
       }
     }
     else if (e.state === 'lunging') {
       e.stateTimer -= (dt / 16);
       
+      const lungeSpeed = e.type === 'gear' ? 18 : 12;
+      e.vx = e.lungeVx * lungeSpeed;
+      e.vy = e.lungeVy * lungeSpeed;
+
       // Hurt player if hit
       if (distToPlayer < e.r + 10 && p.state !== 'attacking') {
         p.hp -= 10;
@@ -139,16 +166,34 @@ export function stepPhysics(state: State, stepMs: number) {
         state.shakeMs = 100;
         e.state = 'recovering';
         e.stateTimer = 60;
+      } 
+      // JUST DODGE logic
+      else if (distToPlayer < e.r + 40 && p.state !== 'attacking' && !e.justDodged) {
+        // Player is very close, but didn't get hit!
+        e.justDodged = true;
+        p.charge = 1.0;
+        state.slowMo = 10;
+        state.screenFlash = 0.5;
+        
+        // Spawn cyan dodge particles
+        for(let i=0; i<8; i++) {
+           state.particles.push({
+             x: p.x, y: p.y,
+             vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
+             life: 1.0, color: '#00f0ff', 
+             size: 6, kind: 'star', shimmer: false
+           });
+        }
       }
 
       if (e.stateTimer <= 0) {
         e.state = 'recovering';
-        e.stateTimer = 60; // Huge 60 frame recovery (The whiff punish window!)
+        e.stateTimer = e.type === 'gear' ? 80 : 40; // Gears have huge recovery
       }
     }
     else if (e.state === 'recovering') {
-      e.vx *= 0.9; // Friction
-      e.vy *= 0.9;
+      e.vx *= 0.85; // Friction
+      e.vy *= 0.85;
       e.stateTimer -= (dt / 16);
       if (e.stateTimer <= 0) {
         e.state = 'chasing';
@@ -159,6 +204,5 @@ export function stepPhysics(state: State, stepMs: number) {
     e.y += e.vy * (dt / 16);
   }
 
-  // Harvest dead enemies
   state.enemies = state.enemies.filter(e => !e.dead);
 }

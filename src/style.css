@@ -1,32 +1,20 @@
 /* =================================================================
-   TAJIMANIA — stylesheet
-   Premium Vector/Neon Steampunk Arcade Brawler
+   TAJIMANIA — stylesheet (TikTok Glitch / Cyberpunk Bachi-Bachi)
    ================================================================= */
 
 :root {
-  --bg-0: #050205;
-  --bg-1: #0a0508;
-  --bg-2: #140810;
+  --bg-0: #010101;
+  --bg-1: #0a0a0a;
 
-  --cyan:   #00f0ff;
-  --pink:   #ff0055;
-  --yellow: #fcee0a;
-  --green:  #39ff14;
-  --orange: #ff9a30;
-  --purple: #b24bff;
-  --indigo: #6d40ff;
-  --gold:   #ffb300;
+  /* TikTok Glitch Colors */
+  --tt-pink: #FE2C55;
+  --tt-cyan: #25F4EE;
+  
+  --yellow:  #fcee0a;
+  --text:    #ffffff;
+  --text-dim:#888888;
 
-  --text:   #e8dfff;
-  --text-d: #9080b0;
-  --text-m: #c0a0e0;
-
-  --glow-cyan:   0 0 10px var(--cyan), 0 0 20px var(--cyan);
-  --glow-gold:   0 0 10px var(--gold), 0 0 20px var(--gold);
-  --glow-pink:   0 0 10px var(--pink), 0 0 20px var(--pink);
-
-  --mono: 'Space Mono', 'JetBrains Mono', ui-monospace, 'SF Mono',
-          'Cascadia Code', Consolas, 'Courier New', monospace;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
   --font: var(--mono);
 }
 
@@ -75,7 +63,7 @@ button {
 .hud {
   position: absolute;
   inset: 0;
-  padding: 24px;
+  padding: 32px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -85,63 +73,72 @@ button {
 .hud-left {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 .stat {
-  background: var(--bg-1);
-  border: 2px solid var(--cyan);
-  border-radius: 0;
-  padding: 12px 18px;
-  min-width: 180px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 6px 6px 0px rgba(0, 240, 255, 1);
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  flex-direction: column;
+  gap: 2px;
 }
 .stat-label {
-  font-size: 14px;
-  letter-spacing: 4px;
-  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: var(--text);
+  text-shadow: 2px 2px 0 var(--tt-pink), -2px -2px 0 var(--tt-cyan);
+  text-transform: uppercase;
 }
 .stat-val {
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 900;
-  color: var(--pink);
-  text-shadow: 2px 0 0 var(--cyan), -2px 0 0 var(--yellow);
+  color: var(--text);
+  text-shadow: 3px 3px 0 var(--tt-pink), -3px -3px 0 var(--tt-cyan);
+  line-height: 1;
+  animation: jitter 0.15s infinite;
+}
+
+@keyframes jitter {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(1px, -1px); }
+  50% { transform: translate(-1px, 0); }
+  75% { transform: translate(0, 1px); }
+  100% { transform: translate(-1px, -1px); }
 }
 
 /* ------- TAJIMANIA Meter ------- */
 .meter {
-  background: var(--bg-1);
-  border: 2px solid var(--pink);
-  border-radius: 0;
-  padding: 12px 16px;
-  min-width: 300px;
-  box-shadow: 6px 6px 0px rgba(255, 0, 85, 1);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .meter-label {
   font-size: 14px;
-  letter-spacing: 6px;
-  color: var(--yellow);
-  text-shadow: 0 0 8px var(--yellow);
-  margin-bottom: 8px;
-  font-weight: bold;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  text-shadow: 2px 2px 0 var(--tt-pink), -2px -2px 0 var(--tt-cyan);
 }
 .meter-bar {
-  height: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
+  width: 200px;
+  height: 16px;
+  background: var(--bg-1);
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  border: 2px solid var(--text);
+  box-shadow: 4px 4px 0 var(--tt-pink), -4px -4px 0 var(--tt-cyan);
 }
 .meter-fill {
   height: 100%;
   width: 0%;
-  background: var(--yellow);
+  background: var(--text);
   transition: width 0.1s linear, background-color 0.2s;
+}
+.meter-value {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--text);
+  margin-top: 4px;
 }
 
 /* ------- Title Screen ------- */
@@ -152,12 +149,11 @@ button {
   justify-content: center;
   align-items: center;
   z-index: 20;
-  background: radial-gradient(circle at center, #140828 0%, #05020a 100%);
-  transition: opacity 1.5s ease-out, transform 1.5s ease-out;
+  background: var(--bg-0);
+  transition: opacity 0.5s ease-out;
 }
 .title-screen.booting {
   opacity: 0;
-  transform: scale(1.1);
   pointer-events: none;
 }
 .title-content {
@@ -165,84 +161,54 @@ button {
 }
 
 .glitch-text {
-  font-size: 100px;
+  font-size: 110px;
   font-weight: 900;
-  letter-spacing: 12px;
-  color: #fff;
+  letter-spacing: 4px;
+  color: var(--text);
   margin: 0;
   position: relative;
-  text-shadow: 0 0 20px var(--cyan), 0 0 60px var(--cyan);
+  text-transform: uppercase;
+  text-shadow: 4px 4px 0 var(--tt-pink), -4px -4px 0 var(--tt-cyan);
+  animation: title-jitter 3s infinite linear alternate-reverse;
 }
 
-.glitch-text::before, .glitch-text::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-}
-
-.glitch-text::before {
-  left: 4px;
-  text-shadow: -2px 0 var(--pink);
-  animation: glitch-anim 2s infinite linear alternate-reverse;
-  clip-path: polygon(0 0, 100% 0, 100% 30%, 0 30%);
-}
-
-.glitch-text::after {
-  left: -4px;
-  text-shadow: -2px 0 var(--cyan);
-  animation: glitch-anim 3s infinite linear alternate-reverse;
-  clip-path: polygon(0 70%, 100% 70%, 100% 100%, 0 100%);
-}
-
-@keyframes glitch-anim {
-  0% { transform: translate(0); }
-  20% { transform: translate(-2px, 1px); }
-  40% { transform: translate(2px, -1px); }
-  60% { transform: translate(-2px, -1px); }
-  80% { transform: translate(2px, 1px); }
-  100% { transform: translate(0); }
+@keyframes title-jitter {
+  0%, 95% { transform: skew(0deg); }
+  96% { transform: skew(10deg); }
+  97% { transform: skew(-10deg); }
+  98% { transform: skew(5deg); }
+  100% { transform: skew(0deg); }
 }
 
 .subtitle {
-  font-size: 16px;
-  letter-spacing: 16px;
-  color: var(--yellow);
-  text-shadow: 2px 0 0 var(--pink), -2px 0 0 var(--cyan);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 12px;
+  color: var(--text);
+  text-shadow: 2px 2px 0 var(--tt-pink), -2px -2px 0 var(--tt-cyan);
   margin-top: 10px;
   margin-bottom: 60px;
-  background: rgba(0,0,0,0.5);
-  padding: 5px;
   display: inline-block;
-  border: 1px solid var(--yellow);
 }
 
 .btn-start {
   padding: 16px 60px;
   font-weight: 900;
-  font-size: 18px;
-  letter-spacing: 12px;
-  color: #000;
-  background: var(--yellow);
-  border: 2px solid var(--yellow);
-  box-shadow: 4px 4px 0 var(--pink);
-  transition: all 0.1s ease-out;
+  font-size: 24px;
+  letter-spacing: 4px;
+  color: var(--bg-0);
+  background: var(--text);
+  border: none;
+  box-shadow: 6px 6px 0 var(--tt-pink), -6px -6px 0 var(--tt-cyan);
+  transition: transform 0.1s;
   cursor: pointer;
   text-transform: uppercase;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
 }
 .btn-start:hover {
-  background: #fff;
-  border-color: #fff;
-  box-shadow: 8px 8px 0 var(--cyan);
-  transform: translate(-4px, -4px);
+  transform: scale(1.05);
 }
 .btn-start:active { 
-  transform: translate(4px, 4px);
-  box-shadow: 0 0 0 var(--cyan);
+  transform: scale(0.95);
 }
 
 /* ------- flash overlay ------- */
@@ -259,3 +225,6 @@ button {
 .flash-overlay.show {
   opacity: 1;
 }
+
+/* Utility to show/hide sections */
+.hidden { display: none !important; }

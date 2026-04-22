@@ -28,11 +28,14 @@ export interface Enemy {
   y: number;
   vx: number;
   vy: number;
+  lungeVx: number;
+  lungeVy: number;
   hp: number;
   r: number;
   dead: boolean;
   state: 'chasing' | 'telegraph' | 'lunging' | 'recovering';
   stateTimer: number;
+  justDodged: boolean;
   type: 'gear' | 'skull';
 }
 
@@ -53,6 +56,7 @@ export interface State {
 
   score: number;
   combo: number;
+  overdriveTimer: number;
 
   particles: Particle[];
   popups: Popup[];
@@ -91,6 +95,7 @@ export function makeState(settings: Settings, palette: Palette): State {
 
     score: 0,
     combo: 0,
+    overdriveTimer: 0,
 
     particles: [],
     popups: [],
