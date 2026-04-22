@@ -36,7 +36,7 @@ export interface Enemy {
   state: 'chasing' | 'telegraph' | 'lunging' | 'recovering';
   stateTimer: number;
   justDodged: boolean;
-  type: 'gear' | 'skull';
+  type: 'gear' | 'skull' | 'boss';
 }
 
 export interface State {
@@ -70,6 +70,11 @@ export interface State {
   
   shakeMs: number;
   shakeMag: number;
+
+  freezeFrames: number;
+  monochromeFrames: number;
+  bgmMuffled: number;
+  bgText: { text: string; timer: number; maxTimer: number };
 }
 
 export function makeState(settings: Settings, palette: Palette): State {
@@ -112,5 +117,10 @@ export function makeState(settings: Settings, palette: Palette): State {
     
     shakeMs: 0,
     shakeMag: 0,
+
+    freezeFrames: 0,
+    monochromeFrames: 0,
+    bgmMuffled: 0,
+    bgText: { text: '', timer: 0, maxTimer: 1 },
   };
 }

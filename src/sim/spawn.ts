@@ -19,6 +19,11 @@ export function tickSpawner(state: State, dtMs: number): void {
     else if (edge === 2) { ex = Math.random() * W; ey = H + 20; }
     else { ex = -20; ey = Math.random() * H; }
 
+    const typeRnd = Math.random();
+    let type: 'gear' | 'skull' | 'boss' = 'gear';
+    if (typeRnd < 0.1 && state.score > 500) type = 'boss';
+    else if (typeRnd < 0.4) type = 'skull';
+
     state.enemies.push({
       id: NEXT_ID++,
       x: ex,
@@ -27,13 +32,13 @@ export function tickSpawner(state: State, dtMs: number): void {
       vy: 0,
       lungeVx: 0,
       lungeVy: 0,
-      hp: 100,
-      r: Math.random() < 0.3 ? 18 : 14,
+      hp: type === 'boss' ? 500 : 100,
+      r: type === 'boss' ? 30 : (type === 'skull' ? 18 : 14),
       dead: false,
       state: 'chasing',
       stateTimer: 0,
       justDodged: false,
-      type: Math.random() < 0.3 ? 'skull' : 'gear'
+      type
     });
   }
 }

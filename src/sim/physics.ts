@@ -16,6 +16,11 @@ export function stepPhysics(state: State, stepMs: number) {
   const dt = state.slowMo > 0 ? stepMs * 0.1 : stepMs;
   if (state.slowMo > 0) state.slowMo--;
 
+  if (state.freezeFrames > 0) {
+    state.freezeFrames -= (stepMs / 16);
+    return; // Freeze physics during heavy hitstop
+  }
+
   // Overdrive logic
   if (state.combo >= 50 && state.overdriveTimer <= 0) {
     state.overdriveTimer = 625; // ~10 seconds
@@ -96,7 +101,6 @@ export function stepPhysics(state: State, stepMs: number) {
             e.vy = ((e.y - p.y) / dist) * 10;
           }
 
-          state.slowMo = 5 + Math.floor(p.charge * 10); 
           state.shakeMag = Math.max(state.shakeMag, 10 + p.charge * 20);
           state.shakeMs = 150;
           state.screenFlash = Math.max(state.screenFlash, p.charge > 0.8 ? 0.6 : 0.2);
@@ -112,18 +116,34 @@ export function stepPhysics(state: State, stepMs: number) {
         }
       }
 
-      if (killedThisFrame > 2) {
+      if (killedThisFrame >= 3) {
+        state.freezeFrames = 15;
+        state.monochromeFrames = 30; // 0.5 sec of monochrome
+        state.bgmMuffled = 30;
+        state.shakeMag = 60;
+        state.shakeMs = 300;
+        state.popups.push({
+          x: p.x, y: p.y - 60,
+          vy: -1, life: 1.5, color: '#ff9a30', text: 'SHATTER!!', size: 48
+        });
+        for(let i=0; i<20; i++) {
+           state.particles.push({
+             x: p.x, y: p.y,
+             vx: (Math.random()-0.5)*40, vy: (Math.random()-0.5)*40,
+             life: 2.5, color: '#ffffff', size: 12, kind: 'star', shimmer: true
+           });
+        }
+      } else if (killedThisFrame > 1) {
         state.popups.push({
           x: p.x, y: p.y - 40,
           vy: -1, life: 1.5, color: '#ff9a30', text: 'MULTIKILL!', size: 24
         });
       }
-      if (state.combo === 10 || state.combo === 30 || state.combo === 50) {
-         state.popups.push({
-          x: p.x, y: p.y - 70,
-          vy: -2, life: 2.0, color: '#fcee0a', text: `${state.combo} COMBO!`, size: 36
-        });
-      }
+
+      if (state.combo === 10) state.bgText = { text: 'SICK!!', timer: 60, maxTimer: 60 };
+      if (state.combo === 30) state.bgText = { text: 'CRAZY!!', timer: 60, maxTimer: 60 };
+      if (state.combo === 50) state.bgText = { text: 'SMOKIN!!', timer: 80, maxTimer: 80 };
+      if (state.combo > 50 && state.combo % 20 === 0) state.bgText = { text: 'STYLISH!!', timer: 80, maxTimer: 80 };
     }
 
     if (p.attackTimer <= 0) {
@@ -200,17 +220,31 @@ export function stepPhysics(state: State, stepMs: number) {
       else if (distToPlayer < e.r + 40 && p.state !== 'attacking' && !e.justDodged) {
         e.justDodged = true;
         p.charge = 1.0;
-        state.slowMo = 10;
-        state.screenFlash = 0.5;
-        state.popups.push({
-          x: p.x, y: p.y - 30,
-          vy: -1, life: 1.0, color: '#00f0ff', text: 'JUST DODGE!', size: 20
-        });
-        for(let i=0; i<8; i++) {
-           state.particles.push({
-             x: p.x, y: p.y,
-             vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
-             life: 1.0, color: '#00f0ff', size: 6, kind: 'star', shimmer: false
+        
+        if (e.type === 'boss') {
+           // SF6 Drive Impact Style Hitstop
+           state.freezeFrames = 30; // heavy hitstop
+           state.bgmMuffled = 60; // muffle BGM
+           state.shakeMag = 60;
+           state.shakeMs = 600;
+           state.screenFlash = 0.8;
+           state.shocks.push({ x: p.x, y: p.y, r: 10, targetR: 1200, life: 0, color: '#fcee0a', thickness: 30, dashed: false }); // Shockwave
+           state.popups.push({
+             x: p.x, y: p.y - 40,
+             vy: -0.5, life: 2.0, color: '#fcee0a', text: 'PUNISH COUNTER!!', size: 36
+           });
+           for(let i=0; i<20; i++) {
+             state.particles.push({
+               x: p.x, y: p.y,
+               vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30,
+               life: 2.0, color: '#fcee0a', size: 10, kind: 'star', shimmer: true
+             });
+           }
+        } else {
+           // Normal dodge: no slow-mo, just small popup
+           state.popups.push({
+             x: p.x, y: p.y - 20,
+             vy: -1, life: 1.0, color: '#00f0ff', text: 'Dodge!', size: 16
            });
         }
       }

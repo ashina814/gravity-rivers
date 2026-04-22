@@ -8,6 +8,21 @@ export function renderScene(ctx: CanvasRenderingContext2D, state: State): void {
   ctx.fillStyle = '#0a0508';
   ctx.fillRect(0, 0, w, h);
   
+  // DMC Typography Background Text
+  if (state.bgText && state.bgText.timer > 0) {
+    state.bgText.timer -= state.lastFrameMs / 16;
+    const progress = 1 - Math.max(0, state.bgText.timer / state.bgText.maxTimer);
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.scale(1 + progress * 0.3, 1 + progress * 0.3);
+    ctx.fillStyle = `rgba(255, 0, 85, ${0.15 * (1 - progress)})`;
+    ctx.font = 'italic 900 160px var(--font, monospace)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(state.bgText.text, 0, 0);
+    ctx.restore();
+  }
+  
   // Dynamic Camera Zoom (Streaming Appeal)
   // Zooms in slightly during slow-mo/heavy hits
   ctx.save();
@@ -44,6 +59,16 @@ export function renderScene(ctx: CanvasRenderingContext2D, state: State): void {
     ctx.fillRect(0, 0, w, h);
     state.screenFlash = Math.max(0, state.screenFlash - 0.1);
     ctx.restore();
+  }
+
+  // Monochrome Flash
+  if (state.monochromeFrames > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'color';
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+    state.monochromeFrames -= state.lastFrameMs / 16;
   }
 }
 

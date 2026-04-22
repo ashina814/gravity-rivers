@@ -235,6 +235,32 @@ button {
   box-shadow: 2px 2px 0 var(--pink);
 }
 
+.tutorial-text {
+  margin-top: 60px;
+  text-align: left;
+  display: inline-block;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 2.2;
+}
+.tutorial-text p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.tutorial-text .key {
+  color: var(--cyan);
+  font-weight: 900;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid var(--cyan);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  min-width: 100px;
+  text-align: center;
+}
+
 /* ------- Game Over Screen ------- */
 .gameover-screen {
   position: absolute;

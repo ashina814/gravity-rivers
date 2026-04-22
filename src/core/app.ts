@@ -38,7 +38,15 @@ export function makeApp(state: State, hooks: AppHooks): App {
     
     // BGM intensity up during fever
     hooks.bgm.setIntensity(state.combo * 0.05);
-    hooks.bgm.setMuted(!state.settings.bgm);
+    
+    if (state.bgmMuffled > 0) {
+      state.bgmMuffled -= (dt / 16);
+      hooks.bgm.setMuted(true);
+      hooks.audio.setVolume(state.settings.volume * 0.1);
+    } else {
+      hooks.bgm.setMuted(!state.settings.bgm);
+      hooks.audio.setVolume(state.settings.volume);
+    }
 
     updateFx(state, state.lastFrameMs);
 
