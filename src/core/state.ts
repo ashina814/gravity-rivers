@@ -39,6 +39,14 @@ export interface Enemy {
   type: 'gear' | 'skull' | 'boss';
 }
 
+export interface SlashLine {
+  x1: number; y1: number;
+  x2: number; y2: number;
+  life: number;
+  maxLife: number;
+  color: string;
+}
+
 export interface State {
   stage: Stage;
   settings: Settings;
@@ -53,14 +61,16 @@ export interface State {
   timeMs: number;
   lastFrameMs: number;
 
-  player: Player;
+  player: Player & { chainReady?: boolean, dashStartX?: number, dashStartY?: number };
   enemies: Enemy[];
 
   score: number;
   combo: number;
   maxCombo: number; // For sharing
   overdriveTimer: number;
+  rankPulse: number;
 
+  slashLines: SlashLine[];
   particles: Particle[];
   popups: Popup[];
   flashes: Flash[];
@@ -99,7 +109,8 @@ export function makeState(settings: Settings, palette: Palette): State {
       charge: 0,
       attackTimer: 0,
       target: { x: 0, y: 0 },
-      hp: 100
+      hp: 100,
+      chainReady: false,
     },
     enemies: [],
 
@@ -107,7 +118,9 @@ export function makeState(settings: Settings, palette: Palette): State {
     combo: 0,
     maxCombo: 0,
     overdriveTimer: 0,
+    rankPulse: 0,
 
+    slashLines: [],
     particles: [],
     popups: [],
     flashes: [],

@@ -16,6 +16,12 @@ export function stepPhysics(state: State, stepMs: number) {
   let dt = state.slowMo > 0 ? stepMs * 0.1 : stepMs;
   if (state.slowMo > 0) state.slowMo--;
 
+  // Update Slash Lines
+  for (const sl of state.slashLines) {
+     sl.life -= (stepMs / 1000) * 3.0; // Fades out in ~0.33s
+  }
+  state.slashLines = state.slashLines.filter(sl => sl.life > 0);
+
   if (state.freezeFrames > 0) {
     state.freezeFrames -= (stepMs / 16);
     return; // Freeze physics during heavy hitstop
@@ -71,8 +77,19 @@ export function stepPhysics(state: State, stepMs: number) {
     p.vy = 0;
   }
 
+  // Rank Pulse
+  if (state.rankPulse > 0) {
+    state.rankPulse -= (stepMs / 16) * 0.05;
+  }
+
   // Attack Resolution
   if (p.state === 'attacking') {
+    if (p.attackTimer === 15) {
+      p.dashStartX = p.x;
+      p.dashStartY = p.y;
+      p.chainReady = false;
+    }
+    
     p.attackTimer -= (dt / 16);
     
     // Dashing phase
@@ -85,6 +102,11 @@ export function stepPhysics(state: State, stepMs: number) {
           p.x += (dx / dist) * dashSpeed;
           p.y += (dy / dist) * dashSpeed;
        }
+    }
+
+    // Chain Strike Cancel (Skip recovery)
+    if (p.attackTimer <= 10 && p.chainReady) {
+       p.attackTimer = 0; // Instant cancel!
     }
 
     // Damage phase
@@ -100,10 +122,17 @@ export function stepPhysics(state: State, stepMs: number) {
           e.hp -= (50 + p.charge * 150);
           if (e.hp <= 0) {
             e.dead = true;
+            
             state.combo++;
             state.maxCombo = Math.max(state.maxCombo, state.combo);
             state.score += 100 * state.combo;
             killedThisFrame++;
+            
+            // Trigger Rank Pulse on threshold
+            const thresholds = [5, 10, 20, 35, 50, 70];
+            if (thresholds.includes(state.combo)) {
+               state.rankPulse = 1.0;
+            }
           } else {
             e.vx = ((e.x - p.x) / dist) * 10;
             e.vy = ((e.y - p.y) / dist) * 10;
@@ -122,6 +151,20 @@ export function stepPhysics(state: State, stepMs: number) {
              });
           }
         }
+      }
+
+      if (killedThisFrame > 0) {
+        p.chainReady = true; // Enables instant recovery cancel
+      }
+
+      if (killedThisFrame >= 2) {
+        // Screen Slash Effect
+        state.slashLines.push({
+           x1: p.dashStartX || p.x, y1: p.dashStartY || p.y,
+           x2: p.x, y2: p.y,
+           life: 1.0, maxLife: 1.0,
+           color: p.charge > 0.8 ? '#ff0055' : '#00f0ff'
+        });
       }
 
       if (killedThisFrame >= 3) {
@@ -147,11 +190,6 @@ export function stepPhysics(state: State, stepMs: number) {
           vy: -1, life: 1.5, color: '#ff9a30', text: 'MULTIKILL!', size: 24
         });
       }
-
-      if (state.combo === 10) state.bgText = { text: 'SICK!!', timer: 60, maxTimer: 60 };
-      if (state.combo === 30) state.bgText = { text: 'CRAZY!!', timer: 60, maxTimer: 60 };
-      if (state.combo === 50) state.bgText = { text: 'SMOKIN!!', timer: 80, maxTimer: 80 };
-      if (state.combo > 50 && state.combo % 20 === 0) state.bgText = { text: 'STYLISH!!', timer: 80, maxTimer: 80 };
     }
 
     if (p.attackTimer <= 0) {
