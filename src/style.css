@@ -258,29 +258,40 @@ button {
 }
 
 .tutorial-text {
-  margin-top: 60px;
+  margin-top: 0;
+  width: 100%;
   text-align: left;
-  display: inline-block;
-  color: var(--text-dim);
-  font-size: 15px;
-  line-height: 2.2;
+  display: flex;
+  flex-direction: column;
 }
 .tutorial-text p {
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.15);
+  gap: 20px;
+}
+.tutorial-text p:last-child {
+  border-bottom: none;
 }
 .tutorial-text .key {
-  color: var(--cyan);
   font-weight: 900;
-  background: rgba(0, 240, 255, 0.1);
-  border: 1px solid var(--cyan);
-  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
   border-radius: 4px;
-  font-size: 13px;
-  min-width: 100px;
+  font-size: 14px;
+  min-width: 120px;
   text-align: center;
+  letter-spacing: 1px;
+  box-shadow: 0 0 8px currentColor;
+}
+.tutorial-text .desc {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
 /* ------- Game Over Screen ------- */
