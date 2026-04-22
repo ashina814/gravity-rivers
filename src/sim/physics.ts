@@ -112,7 +112,7 @@ export function stepPhysics(state: State, stepMs: number) {
                x: e.x, y: e.y,
                vx: (Math.random()-0.5)*20, vy: (Math.random()-0.5)*20,
                life: 1.5, color: p.charge > 0.8 ? '#ff0055' : '#00f0ff', 
-               size: p.charge > 0.8 ? 8 : 4, kind: 'star', shimmer: true
+               size: p.charge > 0.8 ? 6 : 3, kind: 'spark', shimmer: false
              });
           }
         }
@@ -132,7 +132,7 @@ export function stepPhysics(state: State, stepMs: number) {
            state.particles.push({
              x: p.x, y: p.y,
              vx: (Math.random()-0.5)*40, vy: (Math.random()-0.5)*40,
-             life: 2.5, color: '#ffffff', size: 12, kind: 'star', shimmer: true
+             life: 2.5, color: '#fcee0a', size: 8, kind: 'spark', shimmer: false
            });
         }
       } else if (killedThisFrame > 1) {
@@ -213,7 +213,7 @@ export function stepPhysics(state: State, stepMs: number) {
              state.particles.push({
                x: p.x, y: p.y,
                vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30,
-               life: 3.0, color: '#ff0055', size: 10, kind: 'star', shimmer: false
+               life: 3.0, color: '#ff0055', size: 8, kind: 'spark', shimmer: false
              });
            }
         }
@@ -240,7 +240,7 @@ export function stepPhysics(state: State, stepMs: number) {
              state.particles.push({
                x: p.x, y: p.y,
                vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30,
-               life: 2.0, color: '#fcee0a', size: 10, kind: 'star', shimmer: true
+               life: 2.0, color: '#00f0ff', size: 6, kind: 'spark', shimmer: false
              });
            }
         } else {

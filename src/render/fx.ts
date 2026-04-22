@@ -43,16 +43,19 @@ export function drawFx(ctx: CanvasRenderingContext2D, state: State): void {
   for (const p of state.particles) {
     ctx.save();
     ctx.globalAlpha = Math.max(0, p.life);
-    let c = p.color;
-    if (p.shimmer) {
-      const h = (state.tick * 10 + p.x + p.y) % 360;
-      c = `hsl(${h}, 90%, 60%)`;
-    }
-    ctx.fillStyle = c;
-    ctx.shadowColor = c;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
     ctx.shadowBlur = 10 * dpr;
     if (p.kind === 'star') {
       drawStar(ctx, p.x, p.y, p.size);
+    } else if (p.kind === 'spark') {
+      const speed = Math.hypot(p.vx, p.vy);
+      const angle = Math.atan2(p.vy, p.vx);
+      const len = p.size + speed * 1.5;
+      
+      ctx.translate(p.x, p.y);
+      ctx.rotate(angle);
+      ctx.fillRect(-len/2, -p.size/4, len, p.size/2);
     } else {
       ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
     }

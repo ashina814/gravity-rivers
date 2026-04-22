@@ -13,7 +13,7 @@ export interface Particle {
   size: number;
   color: string;
   shimmer: boolean;
-  kind: 'dot' | 'star' | 'trail';
+  kind: 'dot' | 'star' | 'trail' | 'spark';
 }
 
 export interface Popup {
