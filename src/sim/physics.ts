@@ -40,16 +40,23 @@ export function stepPhysics(state: State, stepMs: number) {
     }
   }
 
+  // 1. Time Dilation (Cyber-Iai)
+  if (p.state === 'charging') {
+    dt *= 0.05; // 95% slowdown
+    p.charge = Math.min(1, p.charge + 0.05 * (stepMs / 16)); // Charge uses real time (stepMs) so it doesn't take forever!
+    if (state.overdriveTimer > 0) p.charge = 1.0;
+    state.bgmMuffled = Math.max(state.bgmMuffled, 2); // Muffle BGM while charging
+  }
+
   // Player Movement (Damping towards target)
-  if (p.state === 'moving' || p.state === 'charging') {
+  if (p.state === 'moving') {
     const dx = p.target.x - p.x;
     const dy = p.target.y - p.y;
     
-    const speedMultiplier = p.state === 'charging' ? 0.05 : 0.2;
-    p.vx = dx * speedMultiplier;
-    p.vy = dy * speedMultiplier;
+    p.vx = dx * 0.2;
+    p.vy = dy * 0.2;
     
-    const maxSpeed = p.state === 'charging' ? 1.5 : 8;
+    const maxSpeed = 8;
     const velMag = Math.hypot(p.vx, p.vy);
     if (velMag > maxSpeed) {
       p.vx = (p.vx / velMag) * maxSpeed;
@@ -58,11 +65,10 @@ export function stepPhysics(state: State, stepMs: number) {
 
     p.x += p.vx * (dt / 16);
     p.y += p.vy * (dt / 16);
-
-    if (p.state === 'charging') {
-      p.charge = Math.min(1, p.charge + 0.02 * (dt / 16));
-      if (state.overdriveTimer > 0) p.charge = 1.0;
-    }
+  } else if (p.state === 'charging') {
+    // Stand perfectly still to aim
+    p.vx = 0;
+    p.vy = 0;
   }
 
   // Attack Resolution
@@ -194,61 +200,25 @@ export function stepPhysics(state: State, stepMs: number) {
       e.vx = e.lungeVx * lungeSpeed;
       e.vy = e.lungeVy * lungeSpeed;
 
-      // Hurt player if hit
+      // Hurt player if hit (ONE HIT KILL)
       if (distToPlayer < e.r + 10 && p.state !== 'attacking') {
-        p.hp -= 20; // Increased damage for danger
+        p.hp = 0; 
         state.combo = 0;
-        state.shakeMag = 40;
-        state.shakeMs = 300;
-        state.screenFlash = 0.8;
-        e.state = 'recovering';
-        e.stateTimer = 60;
-
-        // GAME OVER CHECK
-        if (p.hp <= 0) {
-           state.stateMachine = 'gameover';
-           state.slowMo = 0; // Freeze
-           // Explode player
-           for(let i=0; i<30; i++) {
-             state.particles.push({
-               x: p.x, y: p.y,
-               vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30,
-               life: 3.0, color: '#ff0055', size: 8, kind: 'spark', shimmer: false
-             });
-           }
-        }
-      } 
-      // JUST DODGE logic
-      else if (distToPlayer < e.r + 40 && p.state !== 'attacking' && !e.justDodged) {
-        e.justDodged = true;
-        p.charge = 1.0;
+        state.shakeMag = 80;
+        state.shakeMs = 600;
+        state.screenFlash = 1.0;
+        state.bgmMuffled = 60;
+        state.stateMachine = 'gameover';
+        state.slowMo = 0; 
+        state.monochromeFrames = 60; // Dramatic death
         
-        if (e.type === 'boss') {
-           // SF6 Drive Impact Style Hitstop
-           state.freezeFrames = 15; // heavy hitstop
-           state.monochromeFrames = 20; // adding monochrome for boss dodge
-           state.bgmMuffled = 60; // muffle BGM
-           state.shakeMag = 60;
-           state.shakeMs = 600;
-           state.screenFlash = 0.8;
-           state.shocks.push({ x: p.x, y: p.y, r: 10, targetR: 1200, life: 0, color: '#fcee0a', thickness: 30, dashed: false }); // Shockwave
-           state.popups.push({
-             x: p.x, y: p.y - 40,
-             vy: -0.5, life: 2.0, color: '#fcee0a', text: 'PUNISH COUNTER!!', size: 36
-           });
-           for(let i=0; i<20; i++) {
-             state.particles.push({
-               x: p.x, y: p.y,
-               vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30,
-               life: 2.0, color: '#00f0ff', size: 6, kind: 'spark', shimmer: false
-             });
-           }
-        } else {
-           // Normal dodge: no slow-mo, just small popup
-           state.popups.push({
-             x: p.x, y: p.y - 20,
-             vy: -1, life: 1.0, color: '#00f0ff', text: 'Dodge!', size: 16
-           });
+        // Explode player
+        for(let i=0; i<40; i++) {
+          state.particles.push({
+            x: p.x, y: p.y,
+            vx: (Math.random()-0.5)*40, vy: (Math.random()-0.5)*40,
+            life: 3.0, color: '#ff0055', size: 10, kind: 'spark', shimmer: false
+          });
         }
       }
 

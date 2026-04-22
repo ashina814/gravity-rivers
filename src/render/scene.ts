@@ -44,6 +44,32 @@ export function renderScene(ctx: CanvasRenderingContext2D, state: State): void {
   drawGrid(ctx, w, h);
   
   if (state.stateMachine !== 'gameover') {
+    // Laser Sight for Cyber-Iai
+    if (state.player.state === 'charging') {
+      const p = state.player;
+      ctx.save();
+      const dx = p.target.x - p.x;
+      const dy = p.target.y - p.y;
+      const angle = Math.atan2(dy, dx);
+      
+      const dashDist = (30 + p.charge * 80) * 5; 
+      
+      ctx.translate(p.x, p.y);
+      ctx.rotate(angle);
+      
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(dashDist, 0);
+      ctx.strokeStyle = `rgba(255, 0, 85, ${0.3 + p.charge * 0.7})`;
+      ctx.lineWidth = 2 + p.charge * 4;
+      ctx.setLineDash([10, 10]);
+      ctx.lineDashOffset = -(state.tick % 100) * 0.5;
+      ctx.shadowColor = '#ff0055';
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+      ctx.restore();
+    }
+    
     drawPlayer(ctx, state);
   }
   drawEnemies(ctx, state);
