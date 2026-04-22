@@ -3,10 +3,10 @@ import type { State } from '@/core/state';
 let NEXT_ID = 1;
 
 export function tickSpawner(state: State, dtMs: number): void {
-  // Spawn rate increases with time/score
-  const spawnRate = 0.02 + (state.score * 0.00001);
+  // Spawn rate increases slowly
+  const spawnRate = 0.01 + (state.score * 0.000005);
   
-  if (Math.random() < spawnRate && state.enemies.length < 100) {
+  if (Math.random() < spawnRate && state.enemies.length < 30) {
     const W = state.stage.w;
     const H = state.stage.h;
     
@@ -26,9 +26,10 @@ export function tickSpawner(state: State, dtMs: number): void {
       vx: 0,
       vy: 0,
       hp: 100,
-      r: Math.random() < 0.2 ? 14 : 10,
+      r: Math.random() < 0.2 ? 18 : 14,
       dead: false,
-      spawnAnim: 18,
+      state: 'chasing',
+      stateTimer: 0,
       type: Math.random() < 0.3 ? 'skull' : 'gear'
     });
   }

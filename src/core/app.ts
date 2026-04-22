@@ -37,7 +37,7 @@ export function makeApp(state: State, hooks: AppHooks): App {
     hooks.hud.update(state);
     
     // BGM intensity up during fever
-    hooks.bgm.setIntensity(state.fever * 0.01);
+    hooks.bgm.setIntensity(state.combo * 0.05);
     hooks.bgm.setMuted(!state.settings.bgm);
 
     updateFx(state, state.lastFrameMs);

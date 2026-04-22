@@ -15,11 +15,11 @@ export interface Player {
   y: number;
   vx: number;
   vy: number;
-  state: 'idle' | 'aiming' | 'dashing';
-  aimTarget: { x: number; y: number } | null;
-  dashTimer: number;
-  energy: number; // For overdrive
-  combo: number;
+  state: 'moving' | 'charging' | 'attacking';
+  charge: number;       // 0..1
+  attackTimer: number;  // frames for attack recovery
+  target: { x: number; y: number }; // Pointer position
+  hp: number;
 }
 
 export interface Enemy {
@@ -31,7 +31,8 @@ export interface Enemy {
   hp: number;
   r: number;
   dead: boolean;
-  spawnAnim: number;
+  state: 'chasing' | 'telegraph' | 'lunging' | 'recovering';
+  stateTimer: number;
   type: 'gear' | 'skull';
 }
 
@@ -51,14 +52,14 @@ export interface State {
   enemies: Enemy[];
 
   score: number;
-  fever: number;
+  combo: number;
 
   particles: Particle[];
   popups: Popup[];
   flashes: Flash[];
   shocks: ShockRing[];
-  screenFlash: number;      // 0..1 white flash intensity
-  slowMo: number;           // frames of slow-mo remaining
+  screenFlash: number;      
+  slowMo: number;           
   
   shakeMs: number;
   shakeMag: number;
@@ -78,18 +79,18 @@ export function makeState(settings: Settings, palette: Palette): State {
     lastFrameMs: 0,
 
     player: {
-      x: 0, y: 0, // Will be centered on first frame
+      x: 0, y: 0,
       vx: 0, vy: 0,
-      state: 'idle',
-      aimTarget: null,
-      dashTimer: 0,
-      energy: 0,
-      combo: 0
+      state: 'moving',
+      charge: 0,
+      attackTimer: 0,
+      target: { x: 0, y: 0 },
+      hp: 100
     },
     enemies: [],
 
     score: 0,
-    fever: 0,
+    combo: 0,
 
     particles: [],
     popups: [],

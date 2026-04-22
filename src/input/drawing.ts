@@ -11,44 +11,28 @@ export function attachDrawing(canvas: HTMLCanvasElement, state: State, audio: Au
   }
 
   function onDown(e: PointerEvent) {
-    if (!state.began || state.paused || state.player.state === 'dashing') return;
+    if (!state.began || state.paused) return;
     canvas.setPointerCapture(e.pointerId);
+    state.player.target = toStage(e.clientX, e.clientY);
     
-    // Slingshot: start aiming
-    state.player.state = 'aiming';
-    state.player.aimTarget = toStage(e.clientX, e.clientY);
-    state.slowMo = 60; // Bullet time
-  }
-
-  function onMove(e: PointerEvent) {
-    if (state.player.state === 'aiming') {
-      state.player.aimTarget = toStage(e.clientX, e.clientY);
+    if (state.player.state === 'moving') {
+      state.player.state = 'charging';
+      state.player.charge = 0;
     }
   }
 
+  function onMove(e: PointerEvent) {
+    state.player.target = toStage(e.clientX, e.clientY);
+  }
+
   function onUp(e: PointerEvent) {
-    if (state.player.state === 'aiming') {
-      canvas.releasePointerCapture(e.pointerId);
-      
-      const target = toStage(e.clientX, e.clientY);
-      const dx = target.x - state.player.x;
-      const dy = target.y - state.player.y;
-      const dist = Math.hypot(dx, dy);
-      
-      if (dist > 10) {
-         // Dash
-         const speed = 25;
-         state.player.vx = (dx / dist) * speed;
-         state.player.vy = (dy / dist) * speed;
-         state.player.state = 'dashing';
-         state.player.dashTimer = Math.min(20, dist / speed); 
-         sfxClick(audio); // Temp sound
-         state.slowMo = 0;
-      } else {
-         state.player.state = 'idle';
-         state.slowMo = 0;
-      }
-      state.player.aimTarget = null;
+    canvas.releasePointerCapture(e.pointerId);
+    state.player.target = toStage(e.clientX, e.clientY);
+    
+    if (state.player.state === 'charging') {
+      state.player.state = 'attacking';
+      state.player.attackTimer = 15; // 15 frames of attack/recovery
+      sfxClick(audio); // Attack sound placeholder
     }
   }
 

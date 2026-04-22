@@ -29,7 +29,7 @@ function boot(): void {
   // HUD & UI
   const hudEls = queryHud();
   const hud = bindHud(hudEls);
-  hud.setHint('Drag to aim · Release to SLASH');
+  hud.setHint('Pointer to Move · Click to Smash');
 
   const splash = bindSplash();
 

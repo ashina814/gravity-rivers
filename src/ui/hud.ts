@@ -32,45 +32,43 @@ export interface HudRuntime {
 }
 
 export function bindHud(els: HudElements): HudRuntime {
-  let lastInkFill = -1;
-  let lastInkValue = '';
+  let lastHpPct = -1;
+  let lastHpValue = '';
   let lastCombo = -1;
   let lastScore = -1;
-  let bannerTimer = 0;
-  let hintLast = '';
 
   function update(state: State) {
     const p = state.player;
     
-    // Energy meter for OVERDRIVE (Fever)
-    const energyPct = Math.min(100, p.energy);
-    if (Math.abs(energyPct - lastInkFill) > 0.4) {
-      els.inkFill.style.width = energyPct.toFixed(1) + '%';
-      lastInkFill = energyPct;
+    // HP meter for Player
+    const hpPct = Math.max(0, p.hp);
+    if (Math.abs(hpPct - lastHpPct) > 0.4) {
+      els.inkFill.style.width = hpPct.toFixed(1) + '%';
+      
+      // Flash red if low HP
+      if (hpPct < 30) {
+        els.inkFill.style.background = '#ff0055';
+      } else {
+        els.inkFill.style.background = '#fcee0a';
+      }
+      
+      lastHpPct = hpPct;
     }
     
-    const nStr = Math.floor(energyPct) + '%';
-    if (nStr !== lastInkValue) {
+    const nStr = Math.floor(hpPct) + ' HP';
+    if (nStr !== lastHpValue) {
       els.inkValue.textContent = nStr;
-      lastInkValue = nStr;
+      lastHpValue = nStr;
     }
     
-    if (p.combo !== lastCombo) {
-      els.levelCount.textContent = String(p.combo);
-      lastCombo = p.combo;
+    if (state.combo !== lastCombo) {
+      els.levelCount.textContent = String(state.combo);
+      lastCombo = state.combo;
     }
     
     if (state.score !== lastScore) {
       els.scoreCount.textContent = String(state.score);
       lastScore = state.score;
-    }
-
-    if (bannerTimer > 0) {
-      bannerTimer -= state.lastFrameMs;
-      if (bannerTimer <= 0) {
-        els.bloomBanner.classList.remove('show');
-        els.bloomBanner.textContent = '';
-      }
     }
   }
 
@@ -78,15 +76,13 @@ export function bindHud(els: HudElements): HudRuntime {
     els.bloomBanner.textContent = text;
     els.bloomBanner.style.color = color;
     els.bloomBanner.style.borderColor = color;
-    els.bloomBanner.style.textShadow = `0 0 8px ${color}`;
-    els.bloomBanner.style.boxShadow = `0 0 24px ${color}55`;
+    els.bloomBanner.style.textShadow = `none`;
+    els.bloomBanner.style.boxShadow = `4px 4px 0 ${color}`;
     els.bloomBanner.classList.add('show');
-    bannerTimer = durationMs;
+    // Hide logic handled outside
   }
 
   function setHint(text: string) {
-    if (text === hintLast) return;
-    hintLast = text;
     els.hint.textContent = text;
   }
 
