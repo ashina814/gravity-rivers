@@ -14,18 +14,26 @@ export function renderScene(state: State): void {
   gfx.clear();
   uiGfx.clear();
 
-  // Dynamic Camera Zoom
-  const scale = state.slowMo > 0 ? 1.02 : 1.0;
+  // Dynamic Camera
+  const isSlowMo = state.slowMo > 0;
+  const isFreezing = state.freezeFrames > 0;
+  const scale = isFreezing ? 1.04 : isSlowMo ? 1.02 : 1.0;
   const cx = w / 2;
   const cy = h / 2;
   
+  // Directional Screen Shake（減衰付き）
   let ox = 0, oy = 0;
+  if (state.shakeMag > 0 && state.shakeMs > 0) {
+    const intensity = state.shakeMag * (state.shakeMs / 600);
+    const angle = Math.random() * Math.PI * 2;
+    ox = Math.cos(angle) * intensity * 0.15;
+    oy = Math.sin(angle) * intensity * 0.15;
+  }
   if (state.overdriveTimer > 0) {
-    ox = (Math.random() - 0.5) * 2;
-    oy = (Math.random() - 0.5) * 2;
+    ox += (Math.random() - 0.5) * 2;
+    oy += (Math.random() - 0.5) * 2;
   }
 
-  // Update world container transform
   world.position.set(cx + ox, cy + oy);
   world.scale.set(scale);
   world.pivot.set(cx, cy);
