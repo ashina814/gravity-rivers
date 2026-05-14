@@ -74,7 +74,9 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
 
   // Attack Resolution
   if (pState === 2) { // 2: attacking
-    if (attackTimer === PlayerState.attackTimer[eid] || (attackType === 0 && attackTimer === 10) || (attackType === 1 && attackTimer === 18) || (attackType === 2 && attackTimer === 20)) {
+    // 攻撃開始フレームの初期化（attackTimerが最大値のときだけ）
+    const maxTimer = attackType === 0 ? 10 : attackType === 1 ? 18 : 20;
+    if (attackTimer >= maxTimer - 0.5) {
       state.player.dashStartX = Position.x[eid];
       state.player.dashStartY = Position.y[eid];
       chainReady = 0;
@@ -97,7 +99,6 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
       }
     } else if (attackType === 1) {
       // === 回転斬り (Spin Slash) ===
-      // その場に留まり、回転エフェクト用にタイマーだけ消費
       Velocity.x[eid] = 0;
       Velocity.y[eid] = 0;
     } else if (attackType === 2) {
@@ -107,7 +108,7 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
         const dy = state.player.target.y - Position.y[eid];
         const dist = Math.hypot(dx, dy);
         if (dist > 0) {
-          const dashSpeed = 40 + charge * 120; // 超高速
+          const dashSpeed = 40 + charge * 120;
           Position.x[eid] += (dx / dist) * dashSpeed;
           Position.y[eid] += (dy / dist) * dashSpeed;
         }
@@ -115,13 +116,15 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
     }
 
     // Chain Strike Cancel (Skip recovery)
-    if (attackTimer <= 10 && chainReady === 1) {
+    if (attackTimer <= 5 && chainReady === 1) {
        attackTimer = 0;
     }
 
     if (attackTimer <= 0) {
       PlayerState.state[eid] = 0; // back to moving
+      PlayerState.attackType[eid] = 0;
       charge = 0;
+      attackTimer = 0;
     }
   }
 
@@ -131,20 +134,21 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
   PlayerState.attackTimer[eid] = attackTimer;
   PlayerState.chainReady[eid] = chainReady;
   
-  // Sync core state representation (so UI/Camera can easily find player)
+  // Sync core state — 必ず「現在の」ECS stateを読む（ローカル変数pStateは古い可能性がある）
+  const currentState = PlayerState.state[eid];
   state.player.x = Position.x[eid];
   state.player.y = Position.y[eid];
-  state.player.state = pState === 0 ? 'moving' : pState === 1 ? 'charging' : 'attacking';
+  state.player.state = currentState === 0 ? 'moving' : currentState === 1 ? 'charging' : 'attacking';
   state.player.charge = charge;
   state.player.invulnTimer = invulnTimer;
   state.player.attackTimer = attackTimer;
 
-  // ゴーストデータ（リプレイ）の記録：メモリ節約のため3フレームに1回（20fps相当）記録
+  // ゴーストデータ（リプレイ）の記録
   if (state.tick % 3 === 0) {
     state.ghostRecord.push({
       x: Position.x[eid],
       y: Position.y[eid],
-      s: pState,
+      s: currentState,
       c: charge
     });
   }
