@@ -9,6 +9,15 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
   if (players.length === 0) return;
   const eid = players[0];
 
+  // Synchronize input from drawing.ts into ECS
+  if (state.player.state === 'charging' && PlayerState.state[eid] !== 1) {
+    PlayerState.state[eid] = 1;
+    PlayerState.charge[eid] = 0;
+  } else if (state.player.state === 'attacking' && PlayerState.state[eid] !== 2) {
+    PlayerState.state[eid] = 2;
+    PlayerState.attackTimer[eid] = state.player.attackTimer;
+  }
+
   const pState = PlayerState.state[eid];
   let charge = PlayerState.charge[eid];
   let invulnTimer = PlayerState.invulnTimer[eid];
