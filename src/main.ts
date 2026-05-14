@@ -4,7 +4,8 @@ import { loadSettings, saveSettings } from '@/config/settings';
 import { getPalette } from '@/config/palette';
 import { makeState, type State } from '@/core/state';
 import { makeApp } from '@/core/app';
-import { attachViewport } from '@/render/canvas';
+import { initRenderer, app as pixiApp, world } from '@/render/engine';
+import { initUi } from '@/render/ui';
 import { renderScene } from '@/render/scene';
 import { makeAudioEngine } from '@/audio/audio';
 import { makeBgm } from '@/audio/bgm';
@@ -13,7 +14,7 @@ import { attachDrawing } from '@/input/drawing';
 import { queryHud, bindHud } from '@/ui/hud';
 import { bindSplash } from '@/ui/splash';
 
-function boot(): void {
+async function boot(): Promise<void> {
   const canvas = document.getElementById('scene') as HTMLCanvasElement | null;
   if (!canvas) throw new Error('No #scene canvas');
 
@@ -21,7 +22,19 @@ function boot(): void {
   const palette = getPalette(settings.palette);
   const state: State = makeState(settings, palette);
 
-  const viewport = attachViewport(state, canvas);
+  await initRenderer(canvas);
+  initUi(pixiApp.stage);
+
+  // Sync state stage dimensions
+  const syncSize = () => {
+    state.stage.w = window.innerWidth;
+    state.stage.h = window.innerHeight;
+    state.stage.cssW = window.innerWidth;
+    state.stage.cssH = window.innerHeight;
+  };
+  syncSize();
+  window.addEventListener('resize', syncSize);
+
   const audio = makeAudioEngine();
   audio.setVolume(settings.volume);
   const bgm = makeBgm(audio);
@@ -29,7 +42,7 @@ function boot(): void {
   // HUD & UI
   const hudEls = queryHud();
   const hud = bindHud(hudEls);
-  hud.setHint('Pointer to Move · Click to Smash');
+  hud.setHint('Swipe to aim · Release to smash');
 
   const splash = bindSplash();
 
@@ -42,24 +55,9 @@ function boot(): void {
     bgm,
     hud,
     render: (s) => {
-      const ctx = viewport.ctx;
-      const { dpr, w, h } = s.stage;
-      
-      // Update screen shake
-      if (s.shakeMs > 0) {
-        s.shakeMs -= s.lastFrameMs;
-        const mag = s.shakeMag * (s.shakeMs / 200); 
-        const ox = (Math.random() - 0.5) * mag * 2 * dpr;
-        const oy = (Math.random() - 0.5) * mag * 2 * dpr;
-        ctx.setTransform(dpr, 0, 0, dpr, ox, oy);
-      } else {
-        s.shakeMag = 0;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
+      renderScene(s);
+      pixiApp.renderer.render(pixiApp.stage);
 
-      ctx.clearRect(0, 0, w, h);
-      renderScene(ctx, s);
-      
       // Game Over Screen trigger
       if (s.stateMachine === 'gameover') {
          const goScreen = document.getElementById('gameover-screen');
@@ -68,10 +66,20 @@ function boot(): void {
            document.getElementById('go-score')!.textContent = String(s.score);
            document.getElementById('go-combo')!.textContent = String(s.maxCombo);
            hudEls.hint.style.display = 'none';
+
+           // リプレイデータ（ゴースト）をローカルストレージに圧縮保存
+           try {
+             localStorage.setItem('gr_ghost', JSON.stringify(s.ghostRecord));
+           } catch (e) {
+             console.error('Failed to save ghost data', e);
+           }
          }
       }
     },
   });
+
+  // Since we have a manual fixed-timestep render loop, disable PixiJS's auto ticker
+  pixiApp.ticker.stop();
 
   // Game Over Actions
   document.getElementById('btn-restart')?.addEventListener('click', () => {
@@ -102,7 +110,7 @@ function boot(): void {
   window.addEventListener('beforeunload', () => saveSettings(state.settings));
 
   if (import.meta.env.DEV) {
-    (window as any).__gr = { state, app, audio, bgm };
+    (window as any).__gr = { state, app, audio, bgm, pixiApp };
   }
 }
 
@@ -121,9 +129,7 @@ function startSession(
   splash.hide();
 }
 
-try {
-  boot();
-} catch (err) {
+boot().catch(err => {
   console.error(err);
   const pre = document.createElement('pre');
   pre.style.cssText = `
@@ -138,4 +144,4 @@ try {
     'Gravity Rivers failed to start.\n\n' +
     (err instanceof Error ? err.stack || err.message : String(err));
   document.body.appendChild(pre);
-}
+});

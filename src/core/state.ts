@@ -1,6 +1,7 @@
 import type { Settings } from '@/config/settings';
 import type { Palette } from '@/config/palette';
 import type { Particle, Popup, Flash, ShockRing } from '@/render/particles';
+import { createPlayer, createEnemy } from '@/ecs/prefabs';
 
 export interface Stage {
   w: number;
@@ -39,11 +40,10 @@ export interface Enemy {
   type: 'gear' | 'skull' | 'boss';
 }
 
-// Visual effect for enemy death splashes
 export interface KillSplash {
   x: number;
   y: number;
-  timer: number; // 0..1 (fade)
+  timer: number;
   color: string;
 }
 
@@ -82,7 +82,7 @@ export interface State {
 
   score: number;
   combo: number;
-  maxCombo: number; // For sharing
+  maxCombo: number; 
   overdriveTimer: number;
   rankPulse: number;
 
@@ -91,7 +91,7 @@ export interface State {
   popups: Popup[];
   flashes: Flash[];
   shocks: ShockRing[];
-  killSplashes: KillSplash[]; // new field for death splashes
+  killSplashes: KillSplash[];
   screenFlash: number;      
   slowMo: number;           
   
@@ -102,11 +102,22 @@ export interface State {
   monochromeFrames: number;
   bgmMuffled: number;
   bgText: { text: string; timer: number; maxTimer: number };
+
+  // Replay Data
+  ghostRecord: Array<{ x: number; y: number; s: number; c: number }>;
 }
 
 export function makeState(settings: Settings, palette: Palette): State {
+  // Spawn initial bitECS entities
+  createPlayer(400, 300);
+  
+  // 初期スポーンを減らす（Spawnerに任せる）
+  for (let i = 0; i < 5; i++) {
+    createEnemy(200 + Math.random() * 600, 200 + Math.random() * 400, 0, 14, 50); // Gears
+  }
+
   return {
-    stage: { w: 0, h: 0, cssW: 0, cssH: 0, dpr: 1 },
+    stage: { w: 800, h: 600, cssW: 800, cssH: 600, dpr: 1 },
     settings,
     palette,
     running: true,
@@ -120,19 +131,19 @@ export function makeState(settings: Settings, palette: Palette): State {
     lastFrameMs: 0,
 
     player: {
-      x: 0, y: 0,
+      x: 400, y: 300,
       vx: 0, vy: 0,
       state: 'moving',
       charge: 0,
       attackTimer: 0,
-      target: { x: 0, y: 0 },
+      target: { x: 400, y: 300 },
       hp: 100,
       lives: 3,
       invulnTimer: 0,
       chainReady: false,
     },
-    enemies: [],
-    projectiles: [],
+    enemies: [], 
+    projectiles: [], 
 
     score: 0,
     combo: 0,
@@ -141,7 +152,7 @@ export function makeState(settings: Settings, palette: Palette): State {
     rankPulse: 0,
 
     slashLines: [],
-    particles: [],
+    particles: [], 
     popups: [],
     flashes: [],
     shocks: [],
@@ -156,5 +167,7 @@ export function makeState(settings: Settings, palette: Palette): State {
     monochromeFrames: 0,
     bgmMuffled: 0,
     bgText: { text: '', timer: 0, maxTimer: 1 },
+
+    ghostRecord: [],
   };
 }

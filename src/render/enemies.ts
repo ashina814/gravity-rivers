@@ -1,69 +1,63 @@
 import type { State } from '@/core/state';
+import type { Graphics } from 'pixi.js';
+import { defineQuery } from 'bitecs';
+import { world } from '@/ecs/world';
+import { Position, Enemy, Collider } from '@/ecs/components';
 
-export function drawEnemies(ctx: CanvasRenderingContext2D, state: State) {
-  for (const e of state.enemies) {
-    const r = e.r;
-    ctx.save();
-    ctx.translate(e.x, e.y);
-    
-    // Clean color coding by type
-    let color = '#888'; // gear: neutral grey
-    if (e.type === 'skull') color = '#cc4444'; // sniper: muted red
-    if (e.type === 'boss') color = '#ffffff'; // elite: white
-    
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+const enemyQuery = defineQuery([Position, Enemy, Collider]);
 
-    if (e.type === 'gear') {
-      ctx.rotate(state.tick * 0.03);
-      ctx.beginPath();
+export function drawEnemies(g: Graphics, state: State) {
+  const enemies = enemyQuery(world);
+  for (let i = 0; i < enemies.length; i++) {
+    const eid = enemies[i];
+    const x = Position.x[eid];
+    const y = Position.y[eid];
+    const r = Collider.radius[eid];
+    const type = Enemy.type[eid];
+
+    let color = 0x888888;
+    if (type === 1) color = 0xcc4444; // skull
+    if (type === 2) color = 0xffffff; // boss
+
+    if (type === 0) { // gear
+      const angleOffset = state.tick * 0.03;
       const spikes = 6;
-      for (let i = 0; i < spikes * 2; i++) {
-        const angle = (i * Math.PI) / spikes;
-        const radius = i % 2 === 0 ? r : r * 0.65;
-        if (i === 0) ctx.moveTo(Math.cos(angle)*radius, Math.sin(angle)*radius);
-        else ctx.lineTo(Math.cos(angle)*radius, Math.sin(angle)*radius);
+      for (let j = 0; j < spikes * 2; j++) {
+        const angle = angleOffset + (j * Math.PI) / spikes;
+        const radius = j % 2 === 0 ? r : r * 0.65;
+        const px = x + Math.cos(angle) * radius;
+        const py = y + Math.sin(angle) * radius;
+        if (j === 0) g.moveTo(px, py);
+        else g.lineTo(px, py);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    } else if (e.type === 'skull') {
-      // Sniper: diamond
-      ctx.beginPath();
-      ctx.moveTo(0, -r);
-      ctx.lineTo(r, 0);
-      ctx.lineTo(0, r);
-      ctx.lineTo(-r, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      // Crosshair dot
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(0, 0, 3, 0, Math.PI*2);
-      ctx.fill();
-    } else {
-      // Boss: hexagon with shield ring
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const angle = (i * Math.PI * 2) / 6 - Math.PI / 6;
-        const px = Math.cos(angle) * r;
-        const py = Math.sin(angle) * r;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+      g.closePath();
+      g.fill({ color: 0x000000, alpha: 0.6 });
+      g.stroke({ width: 2, color });
+    } else if (type === 1) { // skull
+      g.moveTo(x, y - r);
+      g.lineTo(x + r, y);
+      g.lineTo(x, y + r);
+      g.lineTo(x - r, y);
+      g.closePath();
+      g.fill({ color: 0x000000, alpha: 0.6 });
+      g.stroke({ width: 2, color });
+      
+      g.circle(x, y, 3);
+      g.fill({ color });
+    } else { // boss
+      for (let j = 0; j < 6; j++) {
+        const angle = (j * Math.PI * 2) / 6 - Math.PI / 6;
+        const px = x + Math.cos(angle) * r;
+        const py = y + Math.sin(angle) * r;
+        if (j === 0) g.moveTo(px, py);
+        else g.lineTo(px, py);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      // Shield ring
-      ctx.beginPath();
-      ctx.arc(0, 0, r + 6, 0, Math.PI*2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      g.closePath();
+      g.fill({ color: 0x000000, alpha: 0.6 });
+      g.stroke({ width: 2, color });
+      
+      g.circle(x, y, r + 6);
+      g.stroke({ width: 3, color: 0xffffff, alpha: 0.3 });
     }
-    
-    ctx.restore();
   }
 }

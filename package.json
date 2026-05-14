@@ -13,5 +13,10 @@
   "devDependencies": {
     "typescript": "^5.4.5",
     "vite": "^5.2.11"
+  },
+  "dependencies": {
+    "bitecs": "^0.3.40",
+    "pixi-filters": "^6.1.5",
+    "pixi.js": "^8.18.1"
   }
 }

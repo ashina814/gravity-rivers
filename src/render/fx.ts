@@ -1,139 +1,88 @@
 import type { State } from '@/core/state';
-import { rgba } from '@/utils/color';
+import type { Graphics } from 'pixi.js';
+import { defineQuery } from 'bitecs';
+import { world } from '@/ecs/world';
+import { Position, Velocity, Particle } from '@/ecs/components';
 
-/**
- * Render transient particles, shockrings, flashes, popups.
- * These live in state.particles / state.flashes / state.shocks / state.popups.
- */
-export function drawFx(ctx: CanvasRenderingContext2D, state: State): void {
-  const dpr = state.stage.dpr;
+const particleQuery = defineQuery([Position, Velocity, Particle]);
 
-  // shockwaves
+export function drawFx(g: Graphics, state: State): void {
   for (const sw of state.shocks) {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, 1 - sw.life);
-    ctx.strokeStyle = sw.color;
-    ctx.lineWidth = sw.thickness;
-    if (sw.dashed) {
-      ctx.setLineDash([12, 8]);
-    }
-    ctx.shadowColor = sw.color;
-    ctx.shadowBlur = 16 * dpr;
-    ctx.beginPath();
-    ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
+    const color = sw.color === '#ff0055' ? 0xff0055 : 0x00f0ff;
+    g.circle(sw.x, sw.y, sw.r);
+    g.stroke({ width: sw.thickness, color: color, alpha: Math.max(0, 1 - sw.life) });
   }
 
-  // flashes
   for (const f of state.flashes) {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, f.life);
-    ctx.shadowColor = f.color;
-    ctx.shadowBlur = 26 * dpr;
-    ctx.fillStyle = rgba(f.color, 0.55);
-    ctx.beginPath();
-    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    const color = f.color === '#ff0055' ? 0xff0055 : 0xffffff;
+    g.circle(f.x, f.y, f.r);
+    g.fill({ color: color, alpha: Math.max(0, f.life) * 0.55 });
   }
 
-  // kill splashes
   for (const ks of state.killSplashes) {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, ks.timer);
-    ctx.translate(ks.x, ks.y);
+    const color = ks.color === '#ff0055' ? 0xff0055 : 0xffffff;
     const scale = 1 + (1 - ks.timer) * 1.5;
-    ctx.scale(scale, scale);
-    ctx.fillStyle = ks.color;
-    ctx.beginPath();
+    
+    const points: number[] = [];
     for(let i=0; i<8; i++) {
        const angle = (i/8) * Math.PI * 2;
-       // We use a fixed pseudo-randomness based on position so it doesn't jitter frame-by-frame
        const rnd = Math.abs(Math.sin(ks.x * 12.34 + ks.y * 56.78 + i * 90.12));
-       const r = 20 + rnd * 40 * ks.timer;
-       if (i===0) ctx.moveTo(Math.cos(angle)*r, Math.sin(angle)*r);
-       else ctx.lineTo(Math.cos(angle)*r, Math.sin(angle)*r);
+       const r = (20 + rnd * 40 * ks.timer) * scale;
+       points.push(ks.x + Math.cos(angle)*r, ks.y + Math.sin(angle)*r);
     }
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    g.poly(points);
+    g.fill({ color: color, alpha: Math.max(0, ks.timer) });
   }
 
-  // particles
-  for (const p of state.particles) {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, p.life);
-    ctx.fillStyle = p.color;
-    ctx.shadowColor = p.color;
-    ctx.shadowBlur = 10 * dpr;
-    if (p.kind === 'star') {
-      drawStar(ctx, p.x, p.y, p.size);
-    } else if (p.kind === 'spark') {
-      const speed = Math.hypot(p.vx, p.vy);
-      const angle = Math.atan2(p.vy, p.vx);
-      const len = p.size + speed * 1.5;
+  const particles = particleQuery(world);
+  for (let i = 0; i < particles.length; i++) {
+    const eid = particles[i];
+    const x = Position.x[eid];
+    const y = Position.y[eid];
+    const vx = Velocity.x[eid];
+    const vy = Velocity.y[eid];
+    const life = Particle.life[eid];
+    const size = Particle.size[eid];
+    const kind = Particle.kind[eid];
+    const colorIndex = Particle.colorIndex[eid];
+
+    let color = 0xffffff;
+    if (colorIndex === 1) color = 0xff0055;
+    else if (colorIndex === 2) color = 0x00f0ff;
+    else if (colorIndex === 3) color = 0xfcee0a;
+
+    const alpha = Math.max(0, life);
+
+    if (kind === 1) { // spark
+      const speed = Math.hypot(vx, vy);
+      const angle = Math.atan2(vy, vx);
+      const len = size + speed * 1.5;
       
-      ctx.translate(p.x, p.y);
-      ctx.rotate(angle);
-      ctx.fillRect(-len/2, -p.size/4, len, p.size/2);
+      const hw = len/2;
+      const hh = size/4;
+      
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      
+      const pts = [
+        x + (-hw)*cos - (-hh)*sin, y + (-hw)*sin + (-hh)*cos,
+        x + (hw)*cos - (-hh)*sin,  y + (hw)*sin + (-hh)*cos,
+        x + (hw)*cos - (hh)*sin,   y + (hw)*sin + (hh)*cos,
+        x + (-hw)*cos - (hh)*sin,  y + (-hw)*sin + (hh)*cos,
+      ];
+      g.poly(pts);
+      g.fill({ color, alpha });
     } else {
-      ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
+      g.rect(x - size * 0.5, y - size * 0.5, size, size);
+      g.fill({ color, alpha });
     }
-    ctx.restore();
-  }
-
-  // popups
-  for (const pp of state.popups) {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, pp.life);
-    const sz = pp.size || 14;
-    ctx.font = `900 ${sz}px ui-monospace, monospace`;
-    ctx.textAlign = 'center';
-    ctx.shadowColor = pp.color;
-    ctx.shadowBlur = 12 * dpr;
-    ctx.fillStyle = pp.color;
-    ctx.fillText(pp.text, pp.x, pp.y);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-    ctx.strokeText(pp.text, pp.x, pp.y);
-    ctx.restore();
   }
 }
 
-function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
-  const spikes = 5;
-  const outer = r;
-  const inner = r * 0.42;
-  let rot = -Math.PI / 2;
-  const step = Math.PI / spikes;
-  ctx.beginPath();
-  ctx.moveTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
-  for (let i = 0; i < spikes; i++) {
-    rot += step;
-    ctx.lineTo(cx + Math.cos(rot) * inner, cy + Math.sin(rot) * inner);
-    rot += step;
-    ctx.lineTo(cx + Math.cos(rot) * outer, cy + Math.sin(rot) * outer);
-  }
-  ctx.closePath();
-  ctx.fill();
-}
-
-/**
- * Advance FX state each tick. Particles drift, shocks expand, flashes decay.
- */
 export function updateFx(state: State, dtMs: number): void {
   const dt = dtMs / 16.6667;
 
-  for (const p of state.particles) {
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    p.vy += 0.05 * dt; // gravity
-    p.vx *= Math.pow(0.98, dt);
-    p.life -= 0.012 * dt;
-  }
-  state.particles = state.particles.filter((p) => p.life > 0);
+  // Particle updates are now handled by particleSystem in ECS
 
   for (const pp of state.popups) {
     pp.y += pp.vy * dt;
