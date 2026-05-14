@@ -58,9 +58,12 @@ export function drawFx(g: Graphics, state: State): void {
       const angle = Math.atan2(vy, vx);
       const len = size + speed * 1.5;
       
+      // グロー（ソフトな外周光）
+      g.circle(x, y, size * 2.5);
+      g.fill({ color, alpha: alpha * 0.15 });
+
       const hw = len/2;
       const hh = size/4;
-      
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
       
@@ -72,7 +75,14 @@ export function drawFx(g: Graphics, state: State): void {
       ];
       g.poly(pts);
       g.fill({ color, alpha });
+    } else if (kind === 2) {
+      // star（背景アンビエント用 — 柔らかいドット）
+      g.circle(x, y, size * 0.5);
+      g.fill({ color, alpha: alpha * 0.4 });
     } else {
+      // square（デフォルト）
+      g.circle(x, y, size * 1.5);
+      g.fill({ color, alpha: alpha * 0.1 });
       g.rect(x - size * 0.5, y - size * 0.5, size, size);
       g.fill({ color, alpha });
     }

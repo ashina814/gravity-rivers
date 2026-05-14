@@ -49,9 +49,7 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
     
     if (!wasMax && charge >= 1.0) {
       state.screenFlash = 0.5;
-      // MAX ポップアップ
       state.popups.push({ x: Position.x[eid], y: Position.y[eid] - 30, vy: -1.5, life: 1.0, color: '#ffffff', text: 'MAX', size: 24 });
-      // チャージMAXスパーク（10個）
       for (let i = 0; i < 10; i++) {
         createParticle(
           Position.x[eid], Position.y[eid],
@@ -60,6 +58,19 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
         );
       }
       state.bgmMuffled = Math.max(state.bgmMuffled, 2);
+    }
+
+    // チャージオーラパーティクル（渦巻き）
+    if (state.tick % Math.max(1, Math.floor(4 - charge * 3)) === 0) {
+      const auraAngle = (state.tick * 0.15) + Math.random() * 0.5;
+      const auraR = 20 + charge * 30;
+      const colorIdx = charge >= 0.8 ? 3 : charge >= 0.3 ? 2 : 1;
+      createParticle(
+        Position.x[eid] + Math.cos(auraAngle) * auraR,
+        Position.y[eid] + Math.sin(auraAngle) * auraR,
+        -Math.sin(auraAngle) * 3, Math.cos(auraAngle) * 3,
+        0.5 + charge * 0.3, 2 + charge * 3, 1, colorIdx
+      );
     }
   }
 
@@ -106,12 +117,30 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
           const dashSpeed = 20 + charge * 40;
           Position.x[eid] += (dx / dist) * dashSpeed;
           Position.y[eid] += (dy / dist) * dashSpeed;
+          // ダッシュトレイル（白い残像）
+          createParticle(
+            Position.x[eid] + (Math.random() - 0.5) * 6,
+            Position.y[eid] + (Math.random() - 0.5) * 6,
+            -(dx / dist) * 2, -(dy / dist) * 2,
+            0.3, 3, 1, 0
+          );
         }
       }
     } else if (attackType === 1) {
       // === 回転斬り (Spin Slash) ===
       Velocity.x[eid] = 0;
       Velocity.y[eid] = 0;
+      // 回転パーティクル
+      if (state.tick % 2 === 0) {
+        const spinAngle = state.tick * 0.4;
+        const spinR = 60 + charge * 50;
+        createParticle(
+          Position.x[eid] + Math.cos(spinAngle) * spinR,
+          Position.y[eid] + Math.sin(spinAngle) * spinR,
+          Math.cos(spinAngle + 1.5) * 8, Math.sin(spinAngle + 1.5) * 8,
+          0.4, 4, 1, 2
+        );
+      }
     } else if (attackType === 2) {
       // === 居合・貫通突き (Pierce Thrust) ===
       if (attackTimer > 8) {
@@ -122,6 +151,15 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
           const dashSpeed = 40 + charge * 120;
           Position.x[eid] += (dx / dist) * dashSpeed;
           Position.y[eid] += (dy / dist) * dashSpeed;
+          // 貫通トレイル（赤い残像 × 2本）
+          for (let t = 0; t < 2; t++) {
+            createParticle(
+              Position.x[eid] + (Math.random() - 0.5) * 10,
+              Position.y[eid] + (Math.random() - 0.5) * 10,
+              -(dx / dist) * 5, -(dy / dist) * 5,
+              0.5, 5, 1, 3
+            );
+          }
         }
       }
     }
