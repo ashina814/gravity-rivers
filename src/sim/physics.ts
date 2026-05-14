@@ -15,25 +15,33 @@ export function stepPhysics(state: State, stepMs: number, audio?: AudioEngine) {
      return;
   }
 
-  let dt = state.slowMo > 0 ? stepMs * 0.1 : stepMs;
-  if (state.slowMo > 0) state.slowMo--;
+  // Time Slow Ramp（ゆっくり戻る）
+  let dt = stepMs;
+  if (state.slowMo > 0) {
+    const slowFactor = Math.max(0.1, state.slowMo / 10); // 0.1x → 1.0x にランプアップ
+    dt = stepMs * slowFactor;
+    state.slowMo--;
+  }
 
   for (const sl of state.slashLines) {
-     sl.life -= (stepMs / 1000) * 3.0; // Fades out in ~0.33s
+     sl.life -= (stepMs / 1000) * 3.0;
   }
   state.slashLines = state.slashLines.filter(sl => sl.life > 0);
 
   if (state.freezeFrames > 0) {
     state.freezeFrames -= (stepMs / 16);
-    return; // Freeze physics during heavy hitstop
+    return;
   }
 
   if (state.combo >= 50 && state.overdriveTimer <= 0) {
-    state.overdriveTimer = 625; // ~10 seconds
+    state.overdriveTimer = 625;
     state.screenFlash = 1.0;
     state.shakeMag = 30;
     state.shakeMs = 500;
-    // We should spawn a popup here, but we can rely on state for now
+    state.popups.push({
+      x: state.stage.w / 2, y: state.stage.h / 2 - 50,
+      vy: -1, life: 2.0, color: '#fcee0a', text: '⚡ OVERDRIVE ⚡', size: 48
+    });
   }
   
   if (state.overdriveTimer > 0) {

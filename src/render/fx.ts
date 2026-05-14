@@ -46,10 +46,10 @@ export function drawFx(g: Graphics, state: State): void {
     const kind = Particle.kind[eid];
     const colorIndex = Particle.colorIndex[eid];
 
-    let color = 0xffffff;
-    if (colorIndex === 1) color = 0xff0055;
-    else if (colorIndex === 2) color = 0x00f0ff;
-    else if (colorIndex === 3) color = 0xfcee0a;
+    let color = 0xffffff;            // 0: white
+    if (colorIndex === 1) color = 0x00f0ff;  // 1: cyan
+    else if (colorIndex === 2) color = 0xfcee0a;  // 2: yellow
+    else if (colorIndex === 3) color = 0xff0055;  // 3: red
 
     const alpha = Math.max(0, life);
 

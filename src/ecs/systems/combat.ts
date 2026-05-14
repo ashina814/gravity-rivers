@@ -24,6 +24,11 @@ function flashRGB(intensity: number) {
   }, 80);
 }
 
+/** モバイルハプティクス（振動フィードバック） */
+function haptic(ms: number) {
+  try { navigator?.vibrate?.(ms); } catch { /* no-op */ }
+}
+
 function damagePlayer(state: State, eid: number, audio?: AudioEngine) {
   if (PlayerState.invulnTimer[eid] > 0) return;
   state.player.lives--;
@@ -35,6 +40,7 @@ function damagePlayer(state: State, eid: number, audio?: AudioEngine) {
   state.bgmMuffled = 60;
   PlayerState.invulnTimer[eid] = 60;
   flashRGB(5);
+  haptic(100);
   
   if (state.player.lives <= 0) {
      state.stateMachine = 'gameover';
@@ -149,6 +155,7 @@ export function combatSystem(world: any, state: State, dt: number, audio?: Audio
       state.shakeMs = 150;
       state.screenFlash = Math.max(state.screenFlash, charge > 0.8 ? 0.6 : 0.2);
       flashRGB(3);
+      haptic(killedThisFrame > 0 ? 30 : 15);
       return true;
     };
 
