@@ -62,12 +62,48 @@ export function renderScene(state: State): void {
       const p = state.player;
       const dx = p.target.x - p.x;
       const dy = p.target.y - p.y;
-      const dashDist = (30 + p.charge * 80) * 5; 
-      
-      gfx.moveTo(p.x, p.y);
       const angle = Math.atan2(dy, dx);
-      gfx.lineTo(p.x + Math.cos(angle)*dashDist, p.y + Math.sin(angle)*dashDist);
-      gfx.stroke({ width: 1 + p.charge * 2, color: 0xffffff, alpha: 0.15 + p.charge * 0.35 });
+
+      // チャージ量に応じた色で攻撃タイプを視覚的に示す
+      let previewColor = 0xffffff; // Quick slash
+      let label = 'SLASH';
+      if (p.charge >= 0.8) { previewColor = 0xff0055; label = 'PIERCE'; }
+      else if (p.charge >= 0.3) { previewColor = 0xffff00; label = 'SPIN'; }
+
+      if (p.charge < 0.3) {
+        // Quick slash: 短い線
+        const dashDist = (20 + p.charge * 40) * 5;
+        gfx.moveTo(p.x, p.y);
+        gfx.lineTo(p.x + Math.cos(angle)*dashDist, p.y + Math.sin(angle)*dashDist);
+        gfx.stroke({ width: 1 + p.charge * 2, color: previewColor, alpha: 0.2 + p.charge * 0.3 });
+      } else if (p.charge < 0.8) {
+        // Spin slash: 周囲にリング表示
+        const spinR = 120 + p.charge * 100;
+        gfx.circle(p.x, p.y, spinR);
+        gfx.stroke({ width: 2, color: previewColor, alpha: 0.15 + p.charge * 0.2 });
+      } else {
+        // Pierce thrust: 超長い貫通ライン
+        const dashDist = (40 + p.charge * 120) * 8;
+        gfx.moveTo(p.x, p.y);
+        gfx.lineTo(p.x + Math.cos(angle)*dashDist, p.y + Math.sin(angle)*dashDist);
+        gfx.stroke({ width: 2 + p.charge * 4, color: previewColor, alpha: 0.3 + p.charge * 0.4 });
+      }
+    }
+
+    // 攻撃中のエフェクト
+    if (state.player.state === 'attacking') {
+      const p = state.player;
+      const at = state.player.attackTimer;
+      
+      if (p.charge >= 0.3 && p.charge < 0.8 && at > 3) {
+        // Spin Slash: 回転リングエフェクト
+        const spinR = 120 + p.charge * 100;
+        const spinAlpha = Math.min(1, at / 10);
+        gfx.circle(p.x, p.y, spinR * spinAlpha);
+        gfx.stroke({ width: 4 * spinAlpha, color: 0xffff00, alpha: spinAlpha * 0.6 });
+        gfx.circle(p.x, p.y, spinR * spinAlpha * 0.7);
+        gfx.stroke({ width: 2, color: 0xffff00, alpha: spinAlpha * 0.3 });
+      }
     }
     
     drawPlayer(gfx, state);

@@ -37,6 +37,7 @@ export function combatSystem(world: any, state: State, dt: number, audio?: Audio
   const pState = PlayerState.state[pEid];
   const charge = PlayerState.charge[pEid];
   const attackTimer = PlayerState.attackTimer[pEid];
+  const attackType = PlayerState.attackType[pEid];
 
   const enemies = enemyQuery(world);
   const projectiles = projQuery(world);
@@ -44,80 +45,140 @@ export function combatSystem(world: any, state: State, dt: number, audio?: Audio
   let killedThisFrame = 0;
 
   // --- Attack Resolution (Player dealing damage) ---
-  if (pState === 2 && attackTimer > 8 && attackTimer <= 15) {
-    const attackRadius = 60 + charge * 80;
+  if (pState === 2 && attackTimer > 3) {
     
-    // Check Projectiles
-    for (let i = 0; i < projectiles.length; i++) {
-      const eid = projectiles[i];
-      if (Projectile.dead[eid]) continue;
-      const dist = Math.hypot(Position.x[eid] - px, Position.y[eid] - py);
-      if (dist < attackRadius + 5) {
-        Projectile.dead[eid] = 1;
-        state.combo++;
-        killedThisFrame++;
-        createParticle(Position.x[eid], Position.y[eid], 0, 0, 1.0, 20, 1, 0);
+    // Helper: ヒット時の共通処理
+    const onHitEnemy = (eid: number, ex: number, ey: number, dist: number) => {
+      // Boss Shield Logic
+      if (Enemy.type[eid] === 2 && charge < 1.0) {
+         PlayerState.attackTimer[pEid] = 0; 
+         state.combo = 0; 
+         PlayerState.charge[pEid] = 0;
+         PlayerState.chainReady[pEid] = 0;
+         state.shakeMag = 20; state.shakeMs = 200;
+         if(dist > 0) { 
+           Position.x[pEid] += ((px - ex)/dist)*30; 
+           Position.y[pEid] += ((py - ey)/dist)*30; 
+         }
+         return false;
       }
-    }
+      
+      // ダメージ計算（攻撃タイプによるボーナス）
+      let dmgMult = 1.0;
+      if (attackType === 0) dmgMult = 0.7; // Quick slash: 低火力だが回転が早い
+      if (attackType === 1) dmgMult = 1.2; // Spin slash: やや高火力
+      if (attackType === 2) dmgMult = 2.0; // Pierce: 超高火力
 
-    // Check Enemies
-    for (let i = 0; i < enemies.length; i++) {
-      const eid = enemies[i];
-      if (Enemy.hp[eid] <= 0) continue;
-      
-      const ex = Position.x[eid];
-      const ey = Position.y[eid];
-      const dist = Math.hypot(ex - px, ey - py);
-      
-      if (dist < attackRadius + Collider.radius[eid]) {
-        // Boss Shield Logic
-        if (Enemy.type[eid] === 2 && charge < 1.0) {
-           PlayerState.attackTimer[pEid] = 0; 
-           state.combo = 0; 
-           PlayerState.charge[pEid] = 0;
-           PlayerState.chainReady[pEid] = 0;
-           state.shakeMag = 20; state.shakeMs = 200;
-           // Bounce player
-           if(dist > 0) { 
-             Position.x[pEid] += ((px - ex)/dist)*30; 
-             Position.y[pEid] += ((py - ey)/dist)*30; 
-           }
-           continue;
-        }
+      Enemy.hp[eid] -= (50 + charge * 150) * dmgMult;
+      if (Enemy.hp[eid] <= 0 || Enemy.type[eid] !== 2) {
+        Enemy.hp[eid] = 0;
+        if (audio) sfxExplode(audio, charge);
+
+        state.killSplashes.push({
+           x: ex, y: ey, timer: 1.0, color: attackType === 2 ? '#ff0055' : '#ffffff'
+        });
         
-        Enemy.hp[eid] -= (50 + charge * 150);
-        if (Enemy.hp[eid] <= 0 || Enemy.type[eid] !== 2) {
-          Enemy.hp[eid] = 0; // marks for death
-          if (audio) sfxExplode(audio, charge);
+        state.combo++;
+        state.maxCombo = Math.max(state.maxCombo, state.combo);
+        
+        const pts = 100 * state.combo * (attackType === 2 ? 2 : 1);
+        state.score += pts;
+        killedThisFrame++;
 
-          state.killSplashes.push({
-             x: ex, y: ey, timer: 1.0, color: charge > 0.8 ? '#ff0055' : '#ffffff'
-          });
-          
-          state.combo++;
-          state.maxCombo = Math.max(state.maxCombo, state.combo);
-          
-          const pts = 100 * state.combo;
-          state.score += pts;
-          killedThisFrame++;
-
-          // 画面にスコアポップアップを出す
-          state.popups.push({
-             x: ex, y: ey - 20, vy: -3, text: String(pts),
-             life: 1.0, color: charge > 0.8 ? '#ff0055' : '#ffffff', size: 24
-          });
-          
-          if ([5, 10, 20, 35, 50, 70].includes(state.combo)) {
-             state.rankPulse = 1.0;
-          }
-        } else {
-          Velocity.x[eid] = ((ex - px) / dist) * 10;
-          Velocity.y[eid] = ((ey - py) / dist) * 10;
+        const popColor = attackType === 2 ? '#ff0055' : attackType === 1 ? '#ffff00' : '#ffffff';
+        state.popups.push({
+           x: ex, y: ey - 20, vy: -3, text: String(pts),
+           life: 1.0, color: popColor, size: 24
+        });
+        
+        if ([5, 10, 20, 35, 50, 70].includes(state.combo)) {
+           state.rankPulse = 1.0;
         }
+      } else {
+        Velocity.x[eid] = ((ex - px) / dist) * 10;
+        Velocity.y[eid] = ((ey - py) / dist) * 10;
+      }
 
-        state.shakeMag = Math.max(state.shakeMag, 10 + charge * 20);
-        state.shakeMs = 150;
-        state.screenFlash = Math.max(state.screenFlash, charge > 0.8 ? 0.6 : 0.2);
+      state.shakeMag = Math.max(state.shakeMag, 10 + charge * 20);
+      state.shakeMs = 150;
+      state.screenFlash = Math.max(state.screenFlash, charge > 0.8 ? 0.6 : 0.2);
+      return true;
+    };
+
+    // === 攻撃タイプ別のヒット判定 ===
+
+    if (attackType === 0) {
+      // --- Quick Slash: 前方の小さい範囲 ---
+      const attackRadius = 50 + charge * 40;
+      for (let i = 0; i < projectiles.length; i++) {
+        const eid = projectiles[i];
+        if (Projectile.dead[eid]) continue;
+        const dist = Math.hypot(Position.x[eid] - px, Position.y[eid] - py);
+        if (dist < attackRadius + 5) {
+          Projectile.dead[eid] = 1;
+          state.combo++;
+          killedThisFrame++;
+          createParticle(Position.x[eid], Position.y[eid], 0, 0, 1.0, 20, 1, 0);
+        }
+      }
+      for (let i = 0; i < enemies.length; i++) {
+        const eid = enemies[i];
+        if (Enemy.hp[eid] <= 0) continue;
+        const ex = Position.x[eid]; const ey = Position.y[eid];
+        const dist = Math.hypot(ex - px, ey - py);
+        if (dist < attackRadius + Collider.radius[eid]) {
+          onHitEnemy(eid, ex, ey, dist);
+        }
+      }
+
+    } else if (attackType === 1) {
+      // --- Spin Slash: 広範囲AoE（プレイヤー中心に大きな円） ---
+      const spinRadius = 120 + charge * 100;
+      for (let i = 0; i < projectiles.length; i++) {
+        const eid = projectiles[i];
+        if (Projectile.dead[eid]) continue;
+        const dist = Math.hypot(Position.x[eid] - px, Position.y[eid] - py);
+        if (dist < spinRadius) {
+          Projectile.dead[eid] = 1;
+          state.combo++;
+          killedThisFrame++;
+          createParticle(Position.x[eid], Position.y[eid], 0, 0, 1.0, 20, 1, 0);
+        }
+      }
+      for (let i = 0; i < enemies.length; i++) {
+        const eid = enemies[i];
+        if (Enemy.hp[eid] <= 0) continue;
+        const ex = Position.x[eid]; const ey = Position.y[eid];
+        const dist = Math.hypot(ex - px, ey - py);
+        if (dist < spinRadius + Collider.radius[eid]) {
+          onHitEnemy(eid, ex, ey, dist);
+        }
+      }
+
+    } else if (attackType === 2) {
+      // --- Pierce Thrust: ダッシュ始点からプレイヤー位置まで線分で判定 ---
+      const sx = state.player.dashStartX || px;
+      const sy = state.player.dashStartY || py;
+      const pierceWidth = 40;
+
+      for (let i = 0; i < projectiles.length; i++) {
+        const eid = projectiles[i];
+        if (Projectile.dead[eid]) continue;
+        if (distToSegment(Position.x[eid], Position.y[eid], sx, sy, px, py) < pierceWidth) {
+          Projectile.dead[eid] = 1;
+          state.combo++;
+          killedThisFrame++;
+          createParticle(Position.x[eid], Position.y[eid], 0, 0, 1.0, 20, 1, 0);
+        }
+      }
+      for (let i = 0; i < enemies.length; i++) {
+        const eid = enemies[i];
+        if (Enemy.hp[eid] <= 0) continue;
+        const ex = Position.x[eid]; const ey = Position.y[eid];
+        const dist = Math.hypot(ex - px, ey - py);
+        if (distToSegment(ex, ey, sx, sy, px, py) < pierceWidth + Collider.radius[eid]) {
+          onHitEnemy(eid, ex, ey, dist);
+        }
       }
     }
   }
@@ -168,4 +229,15 @@ export function combatSystem(world: any, state: State, dt: number, audio?: Audio
       removeEntity(world, eid);
     }
   }
+}
+
+/** Point-to-line-segment distance (for pierce thrust hit detection) */
+function distToSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return Math.hypot(px - ax, py - ay);
+  let t = ((px - ax) * dx + (py - ay) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
 }

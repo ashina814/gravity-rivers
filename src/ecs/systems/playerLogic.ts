@@ -15,7 +15,18 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
     PlayerState.charge[eid] = 0;
   } else if (state.player.state === 'attacking' && PlayerState.state[eid] !== 2) {
     PlayerState.state[eid] = 2;
-    PlayerState.attackTimer[eid] = state.player.attackTimer;
+    // チャージ量に応じて攻撃タイプを決定
+    const c = PlayerState.charge[eid];
+    if (c >= 0.8) {
+      PlayerState.attackType[eid] = 2; // 居合・貫通突き
+      PlayerState.attackTimer[eid] = 20; // 長めの突進時間
+    } else if (c >= 0.3) {
+      PlayerState.attackType[eid] = 1; // 回転斬り
+      PlayerState.attackTimer[eid] = 18;
+    } else {
+      PlayerState.attackType[eid] = 0; // 素早い一閃
+      PlayerState.attackTimer[eid] = 10; // 短い
+    }
   }
 
   const pState = PlayerState.state[eid];
@@ -23,6 +34,7 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
   let invulnTimer = PlayerState.invulnTimer[eid];
   let attackTimer = PlayerState.attackTimer[eid];
   let chainReady = PlayerState.chainReady[eid];
+  const attackType = PlayerState.attackType[eid];
 
   if (invulnTimer > 0) {
     invulnTimer -= (stepMs / 16);
@@ -36,14 +48,12 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
     
     if (!wasMax && charge >= 1.0) {
       state.screenFlash = 0.5;
-      // We can spawn some particles here using ECS later
       state.bgmMuffled = Math.max(state.bgmMuffled, 2);
     }
   }
 
   // Player Movement (Damping towards target)
   if (pState === 0) { // 0: moving
-    // Target is still managed in State for now (mouse input)
     const dx = state.player.target.x - Position.x[eid];
     const dy = state.player.target.y - Position.y[eid];
     
@@ -64,29 +74,49 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
 
   // Attack Resolution
   if (pState === 2) { // 2: attacking
-    if (attackTimer === 15) {
+    if (attackTimer === PlayerState.attackTimer[eid] || (attackType === 0 && attackTimer === 10) || (attackType === 1 && attackTimer === 18) || (attackType === 2 && attackTimer === 20)) {
       state.player.dashStartX = Position.x[eid];
       state.player.dashStartY = Position.y[eid];
       chainReady = 0;
     }
     
     attackTimer -= (dt / 16);
-    
-    // Dashing phase
-    if (attackTimer > 10) {
-       const dx = state.player.target.x - Position.x[eid];
-       const dy = state.player.target.y - Position.y[eid];
-       const dist = Math.hypot(dx, dy);
-       if (dist > 0) {
-          const dashSpeed = 30 + charge * 80;
+
+    // 攻撃タイプ別の移動処理
+    if (attackType === 0) {
+      // === 素早い一閃 (Quick Slash) ===
+      if (attackTimer > 5) {
+        const dx = state.player.target.x - Position.x[eid];
+        const dy = state.player.target.y - Position.y[eid];
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0) {
+          const dashSpeed = 20 + charge * 40;
           Position.x[eid] += (dx / dist) * dashSpeed;
           Position.y[eid] += (dy / dist) * dashSpeed;
-       }
+        }
+      }
+    } else if (attackType === 1) {
+      // === 回転斬り (Spin Slash) ===
+      // その場に留まり、回転エフェクト用にタイマーだけ消費
+      Velocity.x[eid] = 0;
+      Velocity.y[eid] = 0;
+    } else if (attackType === 2) {
+      // === 居合・貫通突き (Pierce Thrust) ===
+      if (attackTimer > 8) {
+        const dx = state.player.target.x - Position.x[eid];
+        const dy = state.player.target.y - Position.y[eid];
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0) {
+          const dashSpeed = 40 + charge * 120; // 超高速
+          Position.x[eid] += (dx / dist) * dashSpeed;
+          Position.y[eid] += (dy / dist) * dashSpeed;
+        }
+      }
     }
 
     // Chain Strike Cancel (Skip recovery)
     if (attackTimer <= 10 && chainReady === 1) {
-       attackTimer = 0; // Instant cancel!
+       attackTimer = 0;
     }
 
     if (attackTimer <= 0) {

@@ -26,6 +26,8 @@ export const PlayerState = defineComponent({
   attackTimer: Types.f32,
   invulnTimer: Types.f32,
   chainReady: Types.ui8,
+  // Attack type: 0: quick slash, 1: spin slash (AoE), 2: pierce thrust
+  attackType: Types.ui8,
 });
 
 export const Enemy = defineComponent({
