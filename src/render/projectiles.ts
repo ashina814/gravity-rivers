@@ -1,21 +1,14 @@
 import type { State } from '@/core/state';
+import type { Graphics } from 'pixi.js';
 
-export function drawProjectiles(ctx: CanvasRenderingContext2D, state: State) {
+export function drawProjectiles(g: Graphics, state: State) {
   for (const proj of state.projectiles) {
     if (proj.dead) continue;
-    ctx.save();
-    ctx.translate(proj.x, proj.y);
     
-    ctx.beginPath();
-    ctx.arc(0, 0, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff0055';
-    ctx.fill();
+    g.circle(proj.x, proj.y, 5);
+    g.fill({ color: 0xff0055 });
     
-    ctx.beginPath();
-    ctx.arc(0, 0, 2, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-    
-    ctx.restore();
+    g.circle(proj.x, proj.y, 2);
+    g.fill({ color: 0xffffff });
   }
 }

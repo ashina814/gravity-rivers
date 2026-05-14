@@ -1,62 +1,70 @@
+import { Text, Container, Graphics } from 'pixi.js';
 import type { State } from '@/core/state';
+
+let rankText: Text;
+let wordText: Text;
+export let uiContainer: Container;
+
+export function initUi(parent: Container) {
+  uiContainer = new Container();
+  parent.addChild(uiContainer);
+
+  rankText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 100, fontWeight: '900', fill: 0xffffff, align: 'center' }});
+  rankText.anchor.set(0.5);
+  
+  wordText = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 14, fontWeight: '900', fill: 0xffffff, letterSpacing: 4, align: 'center' }});
+  wordText.anchor.set(0.5);
+  wordText.y = 60;
+  wordText.alpha = 0.5;
+
+  uiContainer.addChild(rankText);
+  uiContainer.addChild(wordText);
+}
 
 export function getStyleRank(combo: number) {
   if (combo < 5) return null;
-  if (combo < 10) return { rank: 'C', word: 'CRAZY', color: 'rgba(255,255,255,0.6)' };
-  if (combo < 20) return { rank: 'B', word: 'BADASS', color: 'rgba(255,255,255,0.7)' };
-  if (combo < 35) return { rank: 'A', word: 'APOCALYPTIC', color: 'rgba(255,255,255,0.8)' };
-  if (combo < 50) return { rank: 'S', word: 'SAVAGE', color: '#ffffff' };
-  if (combo < 70) return { rank: 'SS', word: 'SICK SKILLS', color: '#ffffff' };
-  return { rank: 'SSS', word: 'SMOKIN SEXY STYLE', color: '#ffffff' };
+  if (combo < 10) return { rank: 'C', word: 'CRAZY', color: 0xffffff, alpha: 0.6 };
+  if (combo < 20) return { rank: 'B', word: 'BADASS', color: 0xffffff, alpha: 0.7 };
+  if (combo < 35) return { rank: 'A', word: 'APOCALYPTIC', color: 0xffffff, alpha: 0.8 };
+  if (combo < 50) return { rank: 'S', word: 'SAVAGE', color: 0xffffff, alpha: 1.0 };
+  if (combo < 70) return { rank: 'SS', word: 'SICK SKILLS', color: 0xffffff, alpha: 1.0 };
+  return { rank: 'SSS', word: 'SMOKIN SEXY STYLE', color: 0xffffff, alpha: 1.0 };
 }
 
-export function drawStyleRank(ctx: CanvasRenderingContext2D, state: State) {
+export function updateStyleRank(state: State) {
+  if (!uiContainer) return;
   const rankObj = getStyleRank(state.combo);
-  if (!rankObj) return;
+  if (!rankObj) {
+    uiContainer.visible = false;
+    return;
+  }
+  uiContainer.visible = true;
 
   const { w } = state.stage;
-  ctx.save();
-  ctx.translate(w - 120, 140);
-  
+  uiContainer.x = w - 120;
+  uiContainer.y = 140;
+
   const pulse = state.rankPulse > 0 ? state.rankPulse : 0;
   const scale = 1 + pulse * 0.3;
-  ctx.scale(scale, scale);
-  
-  // Rank letter — big, white, clean
-  ctx.font = '900 100px var(--font, monospace)';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = rankObj.color;
-  ctx.globalAlpha = 0.9;
-  ctx.fillText(rankObj.rank, 0, 0);
-  
-  // Rank word — small, understated
-  ctx.font = '900 14px var(--font, monospace)';
-  ctx.globalAlpha = 0.5;
-  ctx.letterSpacing = '4px';
-  ctx.fillStyle = '#fff';
-  ctx.fillText(rankObj.word, 0, 60);
-  ctx.globalAlpha = 1.0;
-  
-  ctx.restore();
+  uiContainer.scale.set(scale);
+
+  rankText.text = rankObj.rank;
+  rankText.style.fill = rankObj.color;
+  rankText.alpha = rankObj.alpha;
+  wordText.text = rankObj.word;
 }
 
-export function drawLives(ctx: CanvasRenderingContext2D, state: State) {
+export function drawLives(g: Graphics, state: State) {
   if (state.stateMachine === 'gameover') return;
   const lives = state.player.lives;
-  ctx.save();
-  ctx.translate(30, 30);
   
   for (let i = 0; i < 3; i++) {
-    ctx.beginPath();
-    // Small triangles for lives
-    const ox = i * 28;
-    ctx.moveTo(ox, -7);
-    ctx.lineTo(ox + 7, 7);
-    ctx.lineTo(ox - 7, 7);
-    ctx.closePath();
-    ctx.fillStyle = i < lives ? '#ffffff' : 'rgba(255,255,255,0.15)';
-    ctx.fill();
+    const ox = 30 + i * 28;
+    const oy = 30;
+    g.moveTo(ox, oy - 7);
+    g.lineTo(ox + 7, oy + 7);
+    g.lineTo(ox - 7, oy + 7);
+    g.closePath();
+    g.fill({ color: 0xffffff, alpha: i < lives ? 1.0 : 0.15 });
   }
-  ctx.restore();
 }
