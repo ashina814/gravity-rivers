@@ -135,5 +135,5 @@ function drawGrid(g: Graphics, w: number, h: number) {
   const gridR = 80;
   for(let x=0; x<w; x+=gridR) { g.moveTo(x, 0); g.lineTo(x, h); }
   for(let y=0; y<h; y+=gridR) { g.moveTo(0, y); g.lineTo(w, y); }
-  g.stroke({ width: 1, color: 0xffffff, alpha: 0.03 });
+  g.stroke({ width: 1, color: 0x4466aa, alpha: 0.07 });
 }

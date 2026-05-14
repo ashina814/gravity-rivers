@@ -8,6 +8,7 @@ export let app: Application;
 export let world: Container;
 export let gfx: Graphics;
 export let uiGfx: Graphics;
+export let rgbFilter: RGBSplitFilter;
 
 export async function initRenderer(canvas: HTMLCanvasElement) {
   app = new Application();
@@ -15,9 +16,8 @@ export async function initRenderer(canvas: HTMLCanvasElement) {
     canvas,
     resizeTo: window,
     autoDensity: true,
-    // スマホでは解像度を最大2に制限（4Kスマホ等での重さを回避）
     resolution: isMobile ? Math.min(2, window.devicePixelRatio || 1) : Math.max(1, window.devicePixelRatio || 1),
-    backgroundColor: 0x060606,
+    backgroundColor: 0x0a0a18, // 真っ黒→少し青みを足して空間感を出す
   });
 
   world = new Container();
@@ -29,30 +29,32 @@ export async function initRenderer(canvas: HTMLCanvasElement) {
   uiGfx = new Graphics();
   app.stage.addChild(uiGfx);
 
-  // スマホの場合はBloomのQualityとBlurを下げて負荷軽減
+  // Bloom: 本当に明るい部分だけ光る（控えめ）
   const bloom = new AdvancedBloomFilter({
-    threshold: isMobile ? 0.4 : 0.3,
-    bloomScale: isMobile ? 1.0 : 1.5,
-    brightness: 1.2,
-    blur: isMobile ? 4 : 8,
+    threshold: isMobile ? 0.6 : 0.55,
+    bloomScale: isMobile ? 0.5 : 0.7,
+    brightness: 1.1,
+    blur: isMobile ? 3 : 6,
     quality: isMobile ? 2 : 4
   });
 
+  // CRT: 雰囲気だけ。ゲーム性を邪魔しない
   const crt = new CRTFilter({
-    curvature: 1.5,
-    lineWidth: 2.0,
-    lineContrast: 0.2,
-    noise: isMobile ? 0.05 : 0.15,
+    curvature: 0.3,          // 1.5 → 0.3: わずかな曲がりだけ
+    lineWidth: 1.0,
+    lineContrast: 0.04,      // 0.2 → 0.04: 走査線はほぼ見えない
+    noise: isMobile ? 0.01 : 0.02,  // 0.15 → 0.02: ノイズ大幅削減
     seed: Math.random(),
-    vignetting: 0.4,
-    vignettingAlpha: 0.8
+    vignetting: 0.3,
+    vignettingAlpha: 0.25    // 0.8 → 0.25: 周辺減光を控えめに
   });
 
-  const rgb = new RGBSplitFilter({
-    red: { x: -2, y: 0 },
-    green: { x: 0, y: 2 },
-    blue: { x: 2, y: 0 }
+  // RGB Split: デフォルトは無効。ヒット時のみ一瞬かける
+  rgbFilter = new RGBSplitFilter({
+    red: { x: 0, y: 0 },
+    green: { x: 0, y: 0 },
+    blue: { x: 0, y: 0 }
   });
 
-  world.filters = [bloom, rgb, crt];
+  world.filters = [bloom, rgbFilter, crt];
 }

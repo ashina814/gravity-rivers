@@ -1,6 +1,6 @@
 import { defineQuery, removeEntity } from 'bitecs';
 import { Position, Velocity, Collider, Enemy, PlayerTag } from '../components';
-import { createProjectile } from '../prefabs';
+import { createProjectile, createParticle } from '../prefabs';
 
 const enemyQuery = defineQuery([Position, Velocity, Collider, Enemy]);
 const playerQuery = defineQuery([Position, PlayerTag]);
@@ -55,7 +55,9 @@ export function enemyAISystem(world: any, dt: number) {
          const bVx = (dx / dist) * 12;
          const bVy = (dy / dist) * 12;
          createProjectile(ex, ey, bVx, bVy);
-         Enemy.stateTimer[eid] = 120; // reset shot timer
+         Enemy.stateTimer[eid] = 120;
+         // 射撃フラッシュパーティクル
+         createParticle(ex, ey, 0, 0, 0.5, 10, 1, 3); // red spark
       }
     }
     else if (type === 2) { // Boss (Elite)

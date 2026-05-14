@@ -1,5 +1,6 @@
 import { defineQuery } from 'bitecs';
 import { Position, Velocity, PlayerTag, PlayerState } from '../components';
+import { createParticle } from '../prefabs';
 import type { State } from '@/core/state';
 
 const playerQuery = defineQuery([Position, Velocity, PlayerTag, PlayerState]);
@@ -48,6 +49,16 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
     
     if (!wasMax && charge >= 1.0) {
       state.screenFlash = 0.5;
+      // MAX ポップアップ
+      state.popups.push({ x: Position.x[eid], y: Position.y[eid] - 30, vy: -1.5, life: 1.0, color: '#ffffff', text: 'MAX', size: 24 });
+      // チャージMAXスパーク（10個）
+      for (let i = 0; i < 10; i++) {
+        createParticle(
+          Position.x[eid], Position.y[eid],
+          (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20,
+          1.0, 4, 1, 0
+        );
+      }
       state.bgmMuffled = Math.max(state.bgmMuffled, 2);
     }
   }
