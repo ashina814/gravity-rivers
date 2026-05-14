@@ -5,20 +5,24 @@
 export interface AudioEngine {
   ctx: AudioContext | null;
   master: GainNode | null;
+  filter: BiquadFilterNode | null;
   ready: boolean;
   ensure(): boolean;
   setVolume(v: number): void;
   setSuspended(s: boolean): void;
+  setMuffled(m: boolean): void;
 }
 
 export function makeAudioEngine(): AudioEngine {
   const engine: AudioEngine = {
     ctx: null,
     master: null,
+    filter: null,
     ready: false,
     ensure,
     setVolume,
     setSuspended,
+    setMuffled,
   };
 
   function ensure(): boolean {
@@ -30,8 +34,16 @@ export function makeAudioEngine(): AudioEngine {
       engine.ctx = new AC();
       const master = engine.ctx.createGain();
       master.gain.value = 0.55;
-      master.connect(engine.ctx.destination);
+      
+      const filter = engine.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 24000;
+      
+      master.connect(filter);
+      filter.connect(engine.ctx.destination);
+      
       engine.master = master;
+      engine.filter = filter;
       engine.ready = true;
     } catch {
       engine.ctx = null;
@@ -52,6 +64,13 @@ export function makeAudioEngine(): AudioEngine {
     if (!engine.ctx) return;
     if (s && engine.ctx.state === 'running') engine.ctx.suspend().catch(() => {});
     else if (!s && engine.ctx.state !== 'running') engine.ctx.resume().catch(() => {});
+  }
+
+  function setMuffled(m: boolean) {
+    if (!engine.filter || !engine.ctx) return;
+    const tc = engine.ctx.currentTime;
+    // Lowpass cutoff: 800Hz for muffled, 24000Hz (open) for normal
+    engine.filter.frequency.setTargetAtTime(m ? 800 : 24000, tc, 0.05);
   }
 
   return engine;

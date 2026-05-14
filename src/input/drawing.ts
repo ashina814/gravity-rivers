@@ -10,11 +10,20 @@ export function attachDrawing(canvas: HTMLCanvasElement, state: State, audio: Au
     return { x, y };
   }
 
+  let dragAnchor: { x: number; y: number } | null = null;
+  let playerAnchor: { x: number; y: number } | null = null;
+
   function onDown(e: PointerEvent) {
     if (!state.began || state.paused) return;
     canvas.setPointerCapture(e.pointerId);
-    state.player.target = toStage(e.clientX, e.clientY);
     
+    const stagePos = toStage(e.clientX, e.clientY);
+    dragAnchor = stagePos;
+    playerAnchor = { x: state.player.x, y: state.player.y };
+    
+    // Slingshot: initialize target to current player pos (no dash distance yet)
+    state.player.target = { x: state.player.x, y: state.player.y };
+
     if (state.player.state === 'moving') {
       state.player.state = 'charging';
       state.player.charge = 0;
@@ -22,12 +31,42 @@ export function attachDrawing(canvas: HTMLCanvasElement, state: State, audio: Au
   }
 
   function onMove(e: PointerEvent) {
-    state.player.target = toStage(e.clientX, e.clientY);
+    if (!dragAnchor || !playerAnchor) {
+      // If just hovering mouse, we can auto-follow (good for desktop)
+      if (e.pointerType === 'mouse' && state.player.state === 'moving') {
+        state.player.target = toStage(e.clientX, e.clientY);
+      }
+      return;
+    }
+
+    const stagePos = toStage(e.clientX, e.clientY);
+    
+    // Reverse Slingshot: pull back to aim forward
+    const dx = stagePos.x - dragAnchor.x;
+    const dy = stagePos.y - dragAnchor.y;
+    
+    // Apply a sensitivity multiplier (e.g. 1.2x)
+    state.player.target = {
+      x: playerAnchor.x - dx * 1.2,
+      y: playerAnchor.y - dy * 1.2
+    };
   }
 
   function onUp(e: PointerEvent) {
+    if (!dragAnchor) return;
     canvas.releasePointerCapture(e.pointerId);
-    state.player.target = toStage(e.clientX, e.clientY);
+    
+    const stagePos = toStage(e.clientX, e.clientY);
+    const dx = stagePos.x - dragAnchor.x;
+    const dy = stagePos.y - dragAnchor.y;
+    
+    state.player.target = {
+      x: playerAnchor!.x - dx * 1.2,
+      y: playerAnchor!.y - dy * 1.2
+    };
+
+    dragAnchor = null;
+    playerAnchor = null;
     
     if (state.player.state === 'charging') {
       state.player.state = 'attacking';
