@@ -6,6 +6,7 @@ import { drawProjectiles } from './projectiles';
 import { updateStyleRank, drawLives, updatePopups } from './ui';
 import { drawFx } from './fx';
 import { gfx, uiGfx, world } from './engine';
+import { createParticle } from '@/ecs/prefabs';
 
 export function renderScene(state: State): void {
   const { w, h } = state.stage;
@@ -39,6 +40,16 @@ export function renderScene(state: State): void {
   world.pivot.set(cx, cy);
 
   drawGrid(gfx, w, h);
+
+  // 背景アンビエントパーティクル（ゆっくり漂う光の粒）
+  if (state.stateMachine === 'playing' && state.tick % 8 === 0) {
+    createParticle(
+      Math.random() * w, Math.random() * h,
+      (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5,
+      3.0, 1.5 + Math.random() * 2, 2, // kind=2 (star)
+      Math.random() > 0.7 ? 1 : 0  // mostly white, some cyan
+    );
+  }
 
   // Draw Screen Slash Lines
   for (const sl of state.slashLines) {
