@@ -13,6 +13,7 @@ import { sfxBoot } from '@/audio/sfx';
 import { attachDrawing } from '@/input/drawing';
 import { queryHud, bindHud } from '@/ui/hud';
 import { bindSplash } from '@/ui/splash';
+import { GhostReplay } from '@/render/ghost';
 
 async function boot(): Promise<void> {
   const canvas = document.getElementById('scene') as HTMLCanvasElement | null;
@@ -45,6 +46,20 @@ async function boot(): Promise<void> {
   hud.setHint('Swipe to aim · Release to smash');
 
   const splash = bindSplash();
+
+  // タイトル画面でゴーストリプレイを再生
+  const ghost = new GhostReplay(world);
+  let ghostTick: number | null = null;
+  if (ghost.isActive) {
+    const ghostLoop = () => {
+      if (!state.began) {
+        ghost.update();
+        pixiApp.renderer.render(pixiApp.stage);
+        ghostTick = requestAnimationFrame(ghostLoop);
+      }
+    };
+    ghostTick = requestAnimationFrame(ghostLoop);
+  }
 
   // Inputs
   attachDrawing(canvas, state, audio);
@@ -92,7 +107,12 @@ async function boot(): Promise<void> {
     window.open(url, '_blank');
   });
 
-  splash.onStart(() => startSession(state, splash, bgm, audio));
+  splash.onStart(() => {
+    // ゴースト再生を停止
+    if (ghostTick !== null) cancelAnimationFrame(ghostTick);
+    ghost.destroy();
+    startSession(state, splash, bgm, audio);
+  });
   app.start();
 
   document.addEventListener('visibilitychange', () => {
