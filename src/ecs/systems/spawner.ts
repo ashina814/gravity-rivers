@@ -13,7 +13,7 @@ export const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Oper
 const MAX_ENEMIES = isMobile ? 60 : 300;
 
 export function spawnerSystem(state: State) {
-   if (state.stateMachine !== 'playing') return;
+   if (state.stateMachine !== 'playing' || !state.began) return;
 
    const enemies = enemyQuery(world);
    const seconds = state.tick / 60; // プレイ時間（秒）

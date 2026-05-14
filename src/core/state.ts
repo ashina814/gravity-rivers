@@ -108,13 +108,8 @@ export interface State {
 }
 
 export function makeState(settings: Settings, palette: Palette): State {
-  // Spawn initial bitECS entities
+  // プレイヤーのECSエンティティだけ作成（敵はSpawnerに任せる）
   createPlayer(400, 300);
-  
-  // 初期スポーンを減らす（Spawnerに任せる）
-  for (let i = 0; i < 5; i++) {
-    createEnemy(200 + Math.random() * 600, 200 + Math.random() * 400, 0, 14, 50); // Gears
-  }
 
   return {
     stage: { w: 800, h: 600, cssW: 800, cssH: 600, dpr: 1 },
