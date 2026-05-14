@@ -1,9 +1,9 @@
 import type { State } from '@/core/state';
-import { Graphics } from 'pixi.js';
+import type { Graphics } from 'pixi.js';
 import { drawPlayer } from './player';
 import { drawEnemies } from './enemies';
 import { drawProjectiles } from './projectiles';
-import { updateStyleRank, drawLives } from './ui';
+import { updateStyleRank, drawLives, updatePopups } from './ui';
 import { drawFx } from './fx';
 import { gfx, uiGfx, world } from './engine';
 
@@ -76,6 +76,7 @@ export function renderScene(state: State): void {
   drawProjectiles(gfx, state);
   drawFx(gfx, state);
   
+  updatePopups(world, state);
   drawLives(uiGfx, state);
   updateStyleRank(state);
 

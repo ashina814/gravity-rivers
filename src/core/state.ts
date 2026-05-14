@@ -102,17 +102,18 @@ export interface State {
   monochromeFrames: number;
   bgmMuffled: number;
   bgText: { text: string; timer: number; maxTimer: number };
+
+  // Replay Data
+  ghostRecord: Array<{ x: number; y: number; s: number; c: number }>;
 }
 
 export function makeState(settings: Settings, palette: Palette): State {
   // Spawn initial bitECS entities
   createPlayer(400, 300);
   
-  for (let i = 0; i < 15; i++) {
-    createEnemy(200 + Math.random() * 600, 200 + Math.random() * 400, 0, 14, 50); // Gears
-  }
+  // 初期スポーンを減らす（Spawnerに任せる）
   for (let i = 0; i < 5; i++) {
-    createEnemy(200 + Math.random() * 600, 200 + Math.random() * 400, 1, 12, 40); // Skulls
+    createEnemy(200 + Math.random() * 600, 200 + Math.random() * 400, 0, 14, 50); // Gears
   }
 
   return {
@@ -141,8 +142,8 @@ export function makeState(settings: Settings, palette: Palette): State {
       invulnTimer: 0,
       chainReady: false,
     },
-    enemies: [], // No longer used, logic moved to bitECS
-    projectiles: [], // No longer used, logic moved to bitECS
+    enemies: [], 
+    projectiles: [], 
 
     score: 0,
     combo: 0,
@@ -151,7 +152,7 @@ export function makeState(settings: Settings, palette: Palette): State {
     rankPulse: 0,
 
     slashLines: [],
-    particles: [], // Some particles migrated to ECS, keeping this for types temporarily
+    particles: [], 
     popups: [],
     flashes: [],
     shocks: [],
@@ -166,5 +167,7 @@ export function makeState(settings: Settings, palette: Palette): State {
     monochromeFrames: 0,
     bgmMuffled: 0,
     bgText: { text: '', timer: 0, maxTimer: 1 },
+
+    ghostRecord: [],
   };
 }

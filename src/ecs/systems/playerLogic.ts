@@ -99,4 +99,14 @@ export function playerLogicSystem(world: any, state: State, stepMs: number, dt: 
   state.player.charge = charge;
   state.player.invulnTimer = invulnTimer;
   state.player.attackTimer = attackTimer;
+
+  // ゴーストデータ（リプレイ）の記録：メモリ節約のため3フレームに1回（20fps相当）記録
+  if (state.tick % 3 === 0) {
+    state.ghostRecord.push({
+      x: Position.x[eid],
+      y: Position.y[eid],
+      s: pState,
+      c: charge
+    });
+  }
 }

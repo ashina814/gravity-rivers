@@ -6,6 +6,7 @@ import { enemyAISystem } from '@/ecs/systems/enemyAI';
 import { movementSystem } from '@/ecs/systems/movement';
 import { combatSystem } from '@/ecs/systems/combat';
 import { particleSystem } from '@/ecs/systems/particles';
+import { spawnerSystem } from '@/ecs/systems/spawner';
 
 export function stepPhysics(state: State, stepMs: number, audio?: AudioEngine) {
   if (state.stateMachine === 'gameover') {
@@ -49,6 +50,7 @@ export function stepPhysics(state: State, stepMs: number, audio?: AudioEngine) {
   const dtFrames = dt / 16.6667;
 
   // Run bitECS systems
+  spawnerSystem(state);
   playerLogicSystem(world, state, stepMs, dtFrames);
   enemyAISystem(world, dtFrames);
   movementSystem(world, dtFrames);

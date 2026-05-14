@@ -66,6 +66,13 @@ async function boot(): Promise<void> {
            document.getElementById('go-score')!.textContent = String(s.score);
            document.getElementById('go-combo')!.textContent = String(s.maxCombo);
            hudEls.hint.style.display = 'none';
+
+           // リプレイデータ（ゴースト）をローカルストレージに圧縮保存
+           try {
+             localStorage.setItem('gr_ghost', JSON.stringify(s.ghostRecord));
+           } catch (e) {
+             console.error('Failed to save ghost data', e);
+           }
          }
       }
     },

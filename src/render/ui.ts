@@ -68,3 +68,35 @@ export function drawLives(g: Graphics, state: State) {
     g.fill({ color: 0xffffff, alpha: i < lives ? 1.0 : 0.15 });
   }
 }
+
+// --------------------------------------------------------
+// Popups
+// --------------------------------------------------------
+const popupTexts: Text[] = [];
+
+export function updatePopups(parent: Container, state: State) {
+  // Add new text objects if needed
+  while (popupTexts.length < state.popups.length) {
+    const t = new Text({ text: '', style: { fontFamily: 'monospace', fontSize: 24, fontWeight: '900', fill: 0xffffff, align: 'center' }});
+    t.anchor.set(0.5);
+    parent.addChild(t);
+    popupTexts.push(t);
+  }
+
+  // Update existing
+  for (let i = 0; i < popupTexts.length; i++) {
+    const t = popupTexts[i];
+    if (i < state.popups.length) {
+      const p = state.popups[i];
+      t.text = p.text;
+      t.x = p.x;
+      t.y = p.y;
+      t.style.fill = p.color === '#ff0055' ? 0xff0055 : 0xffffff;
+      t.alpha = p.life;
+      t.scale.set(0.5 + p.life * 0.5);
+      t.visible = true;
+    } else {
+      t.visible = false;
+    }
+  }
+}

@@ -96,8 +96,16 @@ export function combatSystem(world: any, state: State, dt: number, audio?: Audio
           
           state.combo++;
           state.maxCombo = Math.max(state.maxCombo, state.combo);
-          state.score += 100 * state.combo;
+          
+          const pts = 100 * state.combo;
+          state.score += pts;
           killedThisFrame++;
+
+          // 画面にスコアポップアップを出す
+          state.popups.push({
+             x: ex, y: ey - 20, vy: -3, text: String(pts),
+             life: 1.0, color: charge > 0.8 ? '#ff0055' : '#ffffff', size: 24
+          });
           
           if ([5, 10, 20, 35, 50, 70].includes(state.combo)) {
              state.rankPulse = 1.0;
