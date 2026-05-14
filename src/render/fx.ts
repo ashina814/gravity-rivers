@@ -1,5 +1,10 @@
 import type { State } from '@/core/state';
 import type { Graphics } from 'pixi.js';
+import { defineQuery } from 'bitecs';
+import { world } from '@/ecs/world';
+import { Position, Velocity, Particle } from '@/ecs/components';
+
+const particleQuery = defineQuery([Position, Velocity, Particle]);
 
 export function drawFx(g: Graphics, state: State): void {
   for (const sw of state.shocks) {
@@ -29,35 +34,46 @@ export function drawFx(g: Graphics, state: State): void {
     g.fill({ color: color, alpha: Math.max(0, ks.timer) });
   }
 
-  for (const p of state.particles) {
+  const particles = particleQuery(world);
+  for (let i = 0; i < particles.length; i++) {
+    const eid = particles[i];
+    const x = Position.x[eid];
+    const y = Position.y[eid];
+    const vx = Velocity.x[eid];
+    const vy = Velocity.y[eid];
+    const life = Particle.life[eid];
+    const size = Particle.size[eid];
+    const kind = Particle.kind[eid];
+    const colorIndex = Particle.colorIndex[eid];
+
     let color = 0xffffff;
-    if (p.color === '#ff0055') color = 0xff0055;
-    else if (p.color === '#fcee0a') color = 0xfcee0a;
-    else if (p.color === '#00f0ff') color = 0x00f0ff;
+    if (colorIndex === 1) color = 0xff0055;
+    else if (colorIndex === 2) color = 0x00f0ff;
+    else if (colorIndex === 3) color = 0xfcee0a;
 
-    const alpha = Math.max(0, p.life);
+    const alpha = Math.max(0, life);
 
-    if (p.kind === 'spark') {
-      const speed = Math.hypot(p.vx, p.vy);
-      const angle = Math.atan2(p.vy, p.vx);
-      const len = p.size + speed * 1.5;
+    if (kind === 1) { // spark
+      const speed = Math.hypot(vx, vy);
+      const angle = Math.atan2(vy, vx);
+      const len = size + speed * 1.5;
       
       const hw = len/2;
-      const hh = p.size/4;
+      const hh = size/4;
       
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
       
       const pts = [
-        p.x + (-hw)*cos - (-hh)*sin, p.y + (-hw)*sin + (-hh)*cos,
-        p.x + (hw)*cos - (-hh)*sin, p.y + (hw)*sin + (-hh)*cos,
-        p.x + (hw)*cos - (hh)*sin, p.y + (hw)*sin + (hh)*cos,
-        p.x + (-hw)*cos - (hh)*sin, p.y + (-hw)*sin + (hh)*cos,
+        x + (-hw)*cos - (-hh)*sin, y + (-hw)*sin + (-hh)*cos,
+        x + (hw)*cos - (-hh)*sin,  y + (hw)*sin + (-hh)*cos,
+        x + (hw)*cos - (hh)*sin,   y + (hw)*sin + (hh)*cos,
+        x + (-hw)*cos - (hh)*sin,  y + (-hw)*sin + (hh)*cos,
       ];
       g.poly(pts);
       g.fill({ color, alpha });
     } else {
-      g.rect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
+      g.rect(x - size * 0.5, y - size * 0.5, size, size);
       g.fill({ color, alpha });
     }
   }
@@ -66,14 +82,7 @@ export function drawFx(g: Graphics, state: State): void {
 export function updateFx(state: State, dtMs: number): void {
   const dt = dtMs / 16.6667;
 
-  for (const p of state.particles) {
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    p.vy += 0.05 * dt; // gravity
-    p.vx *= Math.pow(0.98, dt);
-    p.life -= 0.012 * dt;
-  }
-  state.particles = state.particles.filter((p) => p.life > 0);
+  // Particle updates are now handled by particleSystem in ECS
 
   for (const pp of state.popups) {
     pp.y += pp.vy * dt;
